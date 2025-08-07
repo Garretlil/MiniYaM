@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     implementation(libs.coil.compose)
+    implementation (libs.dimezis.blurview)
 
 
     implementation(libs.androidx.core.ktx)

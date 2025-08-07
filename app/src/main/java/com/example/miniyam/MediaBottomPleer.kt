@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.HeartBroken
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.TagFaces
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -209,8 +210,9 @@ fun MiniPlayer(viewModel: PlayerViewModel) {
                             contentDescription = null
                         )
                     }
+                    Spacer(modifier = Modifier.width(17.dp))
                     Icon(
-                        Icons.Default.PlayArrow,
+                        Icons.Default.SkipNext,
                         modifier = Modifier.clickable {
                             viewModel.playNext()
                         },

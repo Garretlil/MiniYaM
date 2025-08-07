@@ -91,7 +91,7 @@ fun HomeScreen(viewModel: PlayerViewModel = viewModel()){
             )
         }
         else {
-            LazyColumn (modifier = Modifier.padding(top=100.dp)){
+            LazyColumn (modifier = Modifier.padding(top=60.dp)){
                 items(tracks.size) { index ->
                     val track = tracks[index]
                     val painter = rememberAsyncImagePainter(model = track.imageUri)

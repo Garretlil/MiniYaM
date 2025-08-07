@@ -1,3 +1,3 @@
 A simplified clone of Yandex.Music!
 
-<img width="479" height="1012" alt="tg_image_60551858" src="https://github.com/user-attachments/assets/4009778e-aeb3-4a8a-ab8e-006bf8dd3ee2" />
+<img width="383" height="809" alt="tg_image_60551858" src="https://github.com/user-attachments/assets/4009778e-aeb3-4a8a-ab8e-006bf8dd3ee2" />

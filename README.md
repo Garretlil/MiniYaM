@@ -3,4 +3,5 @@ Now it's parcing a local memory for music files and projecting it on UI with bea
 
 <img width="383" height="809" alt="tg_image_60551858" src="https://github.com/user-attachments/assets/4009778e-aeb3-4a8a-ab8e-006bf8dd3ee2" />
 
-![photo_2025-08-07 11 15 01](https://github.com/user-attachments/assets/c909f617-3bd6-4779-8dd3-5881d4e15a66)
+<img width="383" height="809" alt="sc" src="https://github.com/user-attachments/assets/a8014ead-8329-4a97-bfe1-64c80456f966" />
+

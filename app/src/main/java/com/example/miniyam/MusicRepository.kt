@@ -4,20 +4,21 @@ import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.annotation.OptIn
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
+import com.example.miniyam.Interfaces.MusicCatalogService
+import com.example.miniyam.Interfaces.RequestSearchMusic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 
 interface MusicRepository {
-    suspend fun getLocalTracks(): List<Track>
+    suspend fun getTracks(): List<Track>
+    suspend fun searchTracks(query: String):List<Track>
 }
 
 class LocalMusic(private val context: Context) : MusicRepository {
-
     @OptIn(UnstableApi::class)
-    override suspend fun getLocalTracks(): List<Track> {
+    override suspend fun getTracks(): List<Track> {
         val trackList = mutableListOf<Track>()
         withContext(Dispatchers.IO) {
             val projection = arrayOf(
@@ -30,7 +31,6 @@ class LocalMusic(private val context: Context) : MusicRepository {
             )
 
             val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-
             val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
             context.contentResolver.query(
@@ -55,21 +55,29 @@ class LocalMusic(private val context: Context) : MusicRepository {
                     val duration = cursor.getInt(durationCol)
                     val path = cursor.getString(dataCol)
                     val albumId = cursor.getLong(albumIdCol)
-
                     val artUri = Uri.withAppendedPath(
                         Uri.parse("content://media/external/audio/albumart"),
                         albumId.toString()
                     ).toString()
-                    Log.d("Danya",artUri)
-                    print("t")
-
                     if (duration > 0) {
                         trackList.add(Track(id, title, artist, duration, artUri, path))
                     }
                 }
             }
         }
-
         return trackList
+    }
+
+    override suspend fun searchTracks(query: String): List<Track> {
+        return listOf()
+    }
+}
+
+class RemoteMusic(): MusicRepository {
+    override suspend fun getTracks(): List<Track> = withContext(Dispatchers.IO) {
+        MusicCatalogService.api.getTracks()
+    }
+    override suspend fun searchTracks(query: String): List<Track> = withContext(Dispatchers.IO) {
+        MusicCatalogService.api.searchTracks(RequestSearchMusic(searchQuery=query))
     }
 }

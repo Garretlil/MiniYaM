@@ -1,5 +1,7 @@
 package com.example.miniyam
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.HeartBroken
@@ -20,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -34,70 +37,41 @@ sealed class Screen(val route: String, val icon: ImageVector, val label: String)
 }
 
 @Composable
-fun BottomNavBar(navController: NavHostController) {
-    val items = listOf(
-        Screen.Home,
-        Screen.Search,
-        Screen.Library,
-        Screen.Profile
-    )
-
-    NavigationBar {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
-
-        items.forEach { screen ->
-            NavigationBarItem(
-                icon = { Icon(screen.icon, contentDescription = screen.label) },
-                label = { Text(screen.label) },
-                selected = currentRoute == screen.route,
-                onClick = {
-                    if (currentRoute != screen.route) {
-                        navController.navigate(screen.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                }
-            )
-        }
-    }
-}
-@Composable
 fun BottomBar(navController: NavHostController) {
     var currentRoute by remember { mutableStateOf("home") }
-    NavigationBar(containerColor = Color(0xB3F6F6F6), tonalElevation = 0.dp) {
-        NavigationBarItem(
-            selected = currentRoute == "home",
-            onClick = { navController.navigate("home"); currentRoute = "home" },
-            icon = { Icon(Icons.Default.MusicNote, contentDescription = null,modifier = Modifier
-                .size(28.dp)) },
-            colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
-        )
-        NavigationBarItem(
-            selected = currentRoute == "search",
-            onClick = { navController.navigate("search"); currentRoute = "search" },
-            icon = { Icon(Icons.Default.Search, contentDescription = null,modifier = Modifier
-                .size(28.dp)) },
-            colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
-        )
-        NavigationBarItem(
-            selected = currentRoute == "library",
-            onClick = { navController.navigate("library"); currentRoute = "library" },
-            icon = { Icon(Icons.Default.HeartBroken, contentDescription = null,modifier = Modifier
-                .size(28.dp)) },
-            colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
-        )
-        NavigationBarItem(
-            selected = currentRoute == "profile",
-            onClick = { navController.navigate("profile"); currentRoute = "profile" },
-            icon = { Icon(Icons.Default.PersonOutline, contentDescription = null,modifier = Modifier
-                .size(28.dp)) },
-            colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
-        )
+    Box(modifier = Modifier.background(Color.Transparent)){
+        NavigationBar(containerColor = Color(0xB3F6F6F6), tonalElevation = 0.dp,modifier = Modifier.background(
+            Color.Transparent) ) {
+            NavigationBarItem(
+                selected = currentRoute == "home",
+                onClick = { navController.navigate("home"); currentRoute = "home" },
+                icon = { Icon(Icons.Default.MusicNote, contentDescription = null,modifier = Modifier
+                    .size(28.dp)) },
+                colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
+            )
+            NavigationBarItem(
+                selected = currentRoute == "search",
+                onClick = { navController.navigate("search"); currentRoute = "search" },
+                icon = { Icon(Icons.Default.Search, contentDescription = null,modifier = Modifier
+                    .size(28.dp)) },
+                colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
+            )
+            NavigationBarItem(
+                selected = currentRoute == "library",
+                onClick = { navController.navigate("library"); currentRoute = "library" },
+                icon = { Icon(Icons.Default.HeartBroken, contentDescription = null,modifier = Modifier
+                    .size(28.dp)) },
+                colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
+            )
+            NavigationBarItem(
+                selected = currentRoute == "profile",
+                onClick = { navController.navigate("profile"); currentRoute = "profile" },
+                icon = { Icon(Icons.Default.PersonOutline, contentDescription = null,modifier = Modifier
+                    .size(28.dp)) },
+                colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
+            )
 
+        }
     }
+
 }

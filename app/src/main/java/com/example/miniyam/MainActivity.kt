@@ -1,32 +1,32 @@
 package com.example.miniyam
 
+import Presentation.ExpandedPlayerWithSlideAnimation
 import Presentation.Home.PlayerViewModel
+import Presentation.Home.RegAuthScreen
+import Presentation.Search.SearchViewModel
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,67 +36,63 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.miniyam.ui.theme.MiniYaMTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val playerVM: PlayerViewModel = hiltViewModel()
+            val searchVM: SearchViewModel = hiltViewModel()
             MiniYaMTheme(
                 dynamicColor = false
             ) {
-                PermissionWrapper()
+                AppRoot(playerVM,searchVM)
             }
         }
     }
 }
-@Composable
-fun MainScreen(){
-    val navController = rememberNavController()
-    val viewModel: PlayerViewModel = viewModel()
-    Scaffold(modifier = Modifier.fillMaxSize(),
-        bottomBar = {
-            Column {
-                MiniPlayer(viewModel)
-                BottomBar(navController)
-            }
-        }
-    ) { innerPadding ->
-        NavigationHost(navController = navController, modifier = Modifier.padding(innerPadding),viewModel)
-    }
-}
-
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun PermissionWrapper() {
-    val permissionState = rememberPermissionState(
+fun AppRoot(playerVM: PlayerViewModel, searchVM: SearchViewModel) {
+    val audioPermission = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
+    val storagePermission = rememberPermissionState(
         permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
         } else {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
     )
-
     LaunchedEffect(Unit) {
-        permissionState.launchPermissionRequest()
+        audioPermission.launchPermissionRequest()
+        storagePermission.launchPermissionRequest()
     }
+    var showHome by remember { mutableStateOf(true) }
 
-    if (permissionState.status.isGranted) {
-        MainScreen()
-    } else {
+    if (showHome) {
+        MainScreen(playerVM,searchVM)
+    } else if (audioPermission.status.isGranted && storagePermission.status.isGranted){
+        RegAuthScreen(
+            onAuthSuccess = { showHome = true }
+        )
+    }
+    else {
         PermissionDeniedScreen {
-            permissionState.launchPermissionRequest()
+            audioPermission.launchPermissionRequest()
+            storagePermission.launchPermissionRequest()
         }
     }
 }
@@ -124,5 +120,62 @@ fun PermissionDeniedScreen(onRetry: () -> Unit) {
         }
     }
 }
+
+
+@Composable
+fun MainScreen(playerVM: PlayerViewModel,searchVM: SearchViewModel) {
+    val navController = rememberNavController()
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize().background(Color.Transparent),
+            bottomBar = {
+                AnimatedVisibility(
+                    visible = !isExpanded,
+                    enter = slideInVertically { height -> height },
+                    exit = slideOutVertically { height -> height },
+                ) {
+                    val shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(shape),
+                        shape = shape,
+                        tonalElevation = 8.dp,
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            MiniPlayer(playerVM, onExpand = { isExpanded = true })
+                            BottomBar(navController)
+                        }
+                    }
+                }
+            }
+        ) { innerPadding ->
+            NavigationHost(
+                navController = navController,
+                modifier = Modifier.padding(innerPadding),
+                viewModel = playerVM,
+                searchVM =searchVM
+            )
+        }
+
+        if (isExpanded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) { detectTapGestures {} }
+            ) {
+                ExpandedPlayerWithSlideAnimation(
+                    onCollapse = { isExpanded = false },
+                    viewModel = playerVM
+                )
+            }
+        }
+    }
+}
+
+
+
 
 

@@ -1,5 +1,6 @@
 pluginManagement {
     repositories {
+        google()
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
@@ -22,4 +23,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "MiniYaM"
 include(":app")
- 

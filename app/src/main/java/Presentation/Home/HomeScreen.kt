@@ -7,7 +7,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,18 +27,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import com.example.miniyam.BASEURL
+
 
 fun getDuration(milliseconds: Int): String {
     val totalSeconds = milliseconds / 1000
@@ -58,7 +60,6 @@ fun PulsingCircle() {
             repeatMode = RepeatMode.Reverse
         )
     )
-
     Canvas(
         modifier = Modifier
             .size(10.dp)
@@ -72,16 +73,15 @@ fun PulsingCircle() {
     }
 }
 
-
-
 @Composable
-fun HomeScreen(viewModel: PlayerViewModel = viewModel()){
-    val tracks by viewModel.tracks
-    val isLoading by remember {viewModel::isLoading}
+fun HomeScreen(playerVM: PlayerViewModel){
+    val queue by playerVM.currentQueue.collectAsState()
+    val currentTrack by playerVM.currentTrack.collectAsState()
+    val isLoading by remember {playerVM::isLoading}
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart){
         Text(
             text = "Моя музыка",
-            modifier = Modifier.padding(top = 25.dp, start = 16.dp),
+            modifier = Modifier.padding(top = 25.dp, start = 16.dp).blur(1.dp),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
         )
@@ -92,27 +92,31 @@ fun HomeScreen(viewModel: PlayerViewModel = viewModel()){
         }
         else {
             LazyColumn (modifier = Modifier.padding(top=60.dp)){
-                items(tracks.size) { index ->
-                    val track = tracks[index]
-                    val painter = rememberAsyncImagePainter(model = track.imageUri)
-                    val isCurrent=track.id==viewModel.currentTrack?.id
+                items(queue.tracks.size) { index ->
+                    val track = queue.tracks[index]
+                    val isCurrent=track.id==currentTrack?.id
                     Box(modifier =
                          if(isCurrent) Modifier.background(Color(0xFFEEEDED))
                          else Modifier.background(Color.Transparent) ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { viewModel.play(track) }) {
+                            modifier = Modifier.clickable { playerVM.play(track) }) {
                             Box(contentAlignment = Alignment.Center) {
-                                Image(
-                                    painter = painter,
+                                SubcomposeAsyncImage(
+                                    model = BASEURL + track.imageUrl,
                                     contentDescription = null,
+                                    contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .size(80.dp)
                                         .padding(13.dp).clip(RoundedCornerShape(8.dp)),
-                                    contentScale = ContentScale.Crop
-
+                                    loading = {
+                                        CircularProgressIndicator()
+                                    },
+                                    error = {
+                                        Text("Ошибка загрузки")
+                                    }
                                 )
-                                if (viewModel.currentTrack?.id == track.id && viewModel.isTrackPlaying)
+                                if (currentTrack?.id == track.id && playerVM.isTrackPlaying)
                                     PulsingCircle()
                             }
                             Spacer(modifier = Modifier.width(5.dp))
@@ -146,7 +150,7 @@ fun HomeScreen(viewModel: PlayerViewModel = viewModel()){
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(20.dp))
         }
-
     }
 }

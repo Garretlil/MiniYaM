@@ -1,10 +1,7 @@
 package com.example.miniyam
 
-import Presentation.ExpandedPlayerWithSlideAnimation
-import Presentation.Home.PlayerViewModel
-import Presentation.Home.RegAuthScreen
-import Presentation.Search.SearchViewModel
 import android.Manifest
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -39,10 +36,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.miniyam.Presentation.Navigation.BottomBar
+import com.example.miniyam.Presentation.Navigation.MiniPlayer
+import com.example.miniyam.Presentation.Navigation.NavigationHost
+import com.example.miniyam.Presentation.PlayerViewModel
+import com.example.miniyam.Presentation.screens.ExpandedPlayerWithSlideAnimation
+import com.example.miniyam.Presentation.screens.RegAuthScreen
+import com.example.miniyam.Presentation.viewmodels.HomeViewModel
+import com.example.miniyam.Presentation.viewmodels.LikesViewModel
+import com.example.miniyam.Presentation.viewmodels.SearchViewModel
 import com.example.miniyam.ui.theme.MiniYaMTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -57,17 +64,29 @@ class MainActivity : ComponentActivity() {
         setContent {
             val playerVM: PlayerViewModel = hiltViewModel()
             val searchVM: SearchViewModel = hiltViewModel()
+            val homeVM:HomeViewModel = hiltViewModel()
+            val likesVM:LikesViewModel = hiltViewModel()
             MiniYaMTheme(
                 dynamicColor = false
             ) {
-                AppRoot(playerVM,searchVM)
+                AppRoot(playerVM,searchVM,homeVM,likesVM)
             }
         }
     }
 }
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun AppRoot(playerVM: PlayerViewModel, searchVM: SearchViewModel) {
+fun AppRoot(
+    playerVM: PlayerViewModel,
+    searchVM: SearchViewModel,
+    homeVM: HomeViewModel,
+    likesVM: LikesViewModel
+) {
+    val context = LocalContext.current
+    val sharedPref = remember {
+        context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
+    }
+
     val audioPermission = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
     val storagePermission = rememberPermissionState(
         permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -76,23 +95,46 @@ fun AppRoot(playerVM: PlayerViewModel, searchVM: SearchViewModel) {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
     )
-    LaunchedEffect(Unit) {
-        audioPermission.launchPermissionRequest()
-        storagePermission.launchPermissionRequest()
-    }
-    var showHome by remember { mutableStateOf(true) }
 
-    if (showHome) {
-        MainScreen(playerVM,searchVM)
-    } else if (audioPermission.status.isGranted && storagePermission.status.isGranted){
-        RegAuthScreen(
-            onAuthSuccess = { showHome = true }
-        )
-    }
-    else {
-        PermissionDeniedScreen {
+    var showHome by remember { mutableStateOf(false) }
+    val token = sharedPref.getString("token", "") ?: ""
+
+    LaunchedEffect(Unit) {
+        if (!audioPermission.status.isGranted) {
             audioPermission.launchPermissionRequest()
+        }
+    }
+
+    LaunchedEffect(audioPermission.status) {
+        if (audioPermission.status.isGranted && !storagePermission.status.isGranted) {
             storagePermission.launchPermissionRequest()
+        }
+    }
+    LaunchedEffect(token) {
+        showHome = token.isNotEmpty()
+    }
+
+    val allPermissionsGranted = audioPermission.status.isGranted &&
+            storagePermission.status.isGranted
+
+    when {
+        showHome && allPermissionsGranted -> {
+            MainScreen(playerVM, searchVM, homeVM,likesVM)
+        }
+        allPermissionsGranted -> {
+            RegAuthScreen(onAuthSuccess = { showHome = true })
+        }
+        else -> {
+            PermissionDeniedScreen {
+                val permissionsToRequest = listOf(
+                    audioPermission to !audioPermission.status.isGranted,
+                    storagePermission to !storagePermission.status.isGranted
+                ).filter { it.second }.map { it.first }
+
+                permissionsToRequest.forEach { permission ->
+                    permission.launchPermissionRequest()
+                }
+            }
         }
     }
 }
@@ -123,7 +165,12 @@ fun PermissionDeniedScreen(onRetry: () -> Unit) {
 
 
 @Composable
-fun MainScreen(playerVM: PlayerViewModel,searchVM: SearchViewModel) {
+fun MainScreen(
+    playerVM: PlayerViewModel,
+    searchVM: SearchViewModel,
+    homeVM: HomeViewModel,
+    likesVM: LikesViewModel
+) {
     val navController = rememberNavController()
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -156,7 +203,9 @@ fun MainScreen(playerVM: PlayerViewModel,searchVM: SearchViewModel) {
                 navController = navController,
                 modifier = Modifier.padding(innerPadding),
                 viewModel = playerVM,
-                searchVM =searchVM
+                searchVM = searchVM,
+                homeVM = homeVM,
+                likesVM = likesVM
             )
         }
 

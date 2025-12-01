@@ -52,15 +52,14 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    init {
-        loadTracks()
-    }
-
-    private fun loadTracks() {
+    fun loadTracks() {
         viewModelScope.launch {
-            val tracks = remoteMusic.getTracks(sharedPreferences.getString("token", "") ?: "")
-            _homeQueue.update { current ->
-                current.copy(tracks = tracks.map { it.copy(url = BASEURL+it.url) })
+            val token = sharedPreferences.getString("token", "") ?: ""
+            if (token.isNotEmpty()) {
+                val tracks = remoteMusic.getTracks(token)
+                _homeQueue.update { current ->
+                    current.copy(tracks = tracks.map { it.copy(url = BASEURL+it.url)})
+                }
             }
         }
     }

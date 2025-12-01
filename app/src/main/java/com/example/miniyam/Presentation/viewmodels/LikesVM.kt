@@ -51,15 +51,15 @@ class LikesViewModel @Inject constructor(
         }
     }
 
-    init {
-        loadTracks()
-    }
-
-    private fun loadTracks() {
+    fun loadTracks() {
         viewModelScope.launch {
-            val tracks = remoteMusic.getLikesTracks(sharedPreferences.getString("token", "") ?: "")
-            _likesQueue.update { current ->
-                current.copy(tracks = tracks.map { it.copy(url = BASEURL +it.url) })
+            val token = sharedPreferences.getString("token", "") ?: ""
+            // Загружаем треки только если токен не пустой
+            if (token.isNotEmpty()) {
+                val tracks = remoteMusic.getLikesTracks(token)
+                _likesQueue.update { current ->
+                    current.copy(tracks = tracks.map { it.copy(url = BASEURL +it.url) })
+                }
             }
         }
     }

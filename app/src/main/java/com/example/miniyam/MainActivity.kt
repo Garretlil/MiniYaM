@@ -97,7 +97,11 @@ fun AppRoot(
     )
 
     var showHome by remember { mutableStateOf(false) }
-    val token = sharedPref.getString("token", "") ?: ""
+    
+    LaunchedEffect(Unit) {
+        val token = sharedPref.getString("token", "") ?: ""
+        showHome = token.isNotEmpty()
+    }
 
     LaunchedEffect(Unit) {
         if (!audioPermission.status.isGranted) {
@@ -110,19 +114,19 @@ fun AppRoot(
             storagePermission.launchPermissionRequest()
         }
     }
-    LaunchedEffect(token) {
-        showHome = token.isNotEmpty()
-    }
 
     val allPermissionsGranted = audioPermission.status.isGranted &&
             storagePermission.status.isGranted
 
     when {
         showHome && allPermissionsGranted -> {
-            MainScreen(playerVM, searchVM, homeVM,likesVM)
+            MainScreen(playerVM, searchVM, homeVM, likesVM, showHome)
         }
         allPermissionsGranted -> {
-            RegAuthScreen(onAuthSuccess = { showHome = true })
+            RegAuthScreen(onAuthSuccess = { 
+                val token = sharedPref.getString("token", "") ?: ""
+                showHome = token.isNotEmpty()
+            })
         }
         else -> {
             PermissionDeniedScreen {
@@ -169,10 +173,20 @@ fun MainScreen(
     playerVM: PlayerViewModel,
     searchVM: SearchViewModel,
     homeVM: HomeViewModel,
-    likesVM: LikesViewModel
+    likesVM: LikesViewModel,
+    showHome: Boolean
 ) {
     val navController = rememberNavController()
     var isExpanded by remember { mutableStateOf(false) }
+    
+    // Загружаем треки только когда showHome = true (то есть токен есть)
+    // loadTracks() сам проверит токен перед выполнением запроса
+    LaunchedEffect(showHome) {
+        if (showHome) {
+            homeVM.loadTracks()
+            likesVM.loadTracks()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
         Scaffold(

@@ -4,9 +4,12 @@ import android.Manifest
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -15,6 +18,8 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,10 +40,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+
+import androidx.compose.ui.graphics.Shader
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.miniyam.Presentation.Navigation.BottomBar
@@ -55,6 +64,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import dagger.hilt.android.AndroidEntryPoint
+import android.graphics.RenderEffect
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.IntrinsicSize
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -100,6 +112,7 @@ fun AppRoot(
     
     LaunchedEffect(Unit) {
         val token = sharedPref.getString("token", "") ?: ""
+        //sharedPref.edit().putString("token","").apply()
         showHome = token.isNotEmpty()
     }
 
@@ -167,6 +180,47 @@ fun PermissionDeniedScreen(onRetry: () -> Unit) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
+@Composable
+fun BlurredBottomBar(
+    modifier: Modifier = Modifier,
+    radius: Float = 35f,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+    ) {
+
+        AndroidView(
+            modifier = Modifier.matchParentSize(),
+            factory = { context ->
+                FrameLayout(context).apply {
+                    setWillNotDraw(false)
+                    setLayerType(View.LAYER_TYPE_HARDWARE, null)
+                }
+            },
+            update = { view ->
+                val blur = RenderEffect.createBlurEffect(
+                    radius,
+                    radius,
+                    android.graphics.Shader.TileMode.CLAMP
+                )
+                view.setRenderEffect(blur)
+            }
+        )
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(Color.White.copy(alpha = 0.25f)),
+            content = content
+        )
+    }
+}
+
+
 
 @Composable
 fun MainScreen(
@@ -178,9 +232,7 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     var isExpanded by remember { mutableStateOf(false) }
-    
-    // Загружаем треки только когда showHome = true (то есть токен есть)
-    // loadTracks() сам проверит токен перед выполнением запроса
+
     LaunchedEffect(showHome) {
         if (showHome) {
             homeVM.loadTracks()
@@ -203,6 +255,7 @@ fun MainScreen(
                             .fillMaxWidth()
                             .clip(shape),
                         shape = shape,
+                        color = Color.Transparent,
                         tonalElevation = 8.dp,
                     ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
@@ -215,7 +268,7 @@ fun MainScreen(
         ) { innerPadding ->
             NavigationHost(
                 navController = navController,
-                modifier = Modifier.padding(innerPadding),
+                modifier = Modifier.fillMaxSize(),
                 viewModel = playerVM,
                 searchVM = searchVM,
                 homeVM = homeVM,

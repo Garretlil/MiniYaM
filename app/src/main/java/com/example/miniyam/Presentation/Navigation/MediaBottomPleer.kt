@@ -104,7 +104,7 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
     val currentTrack by viewModel.currentTrack.collectAsState()
     val isPlaying by viewModel::isTrackPlaying
     val currentPosition by viewModel::currentPositionMs
-    val imageUrl = BASEURL + currentTrack?.imageUrl
+    val imageUrl =   currentTrack?.imageUrl
 
     var trackAverageColor by remember { mutableStateOf(Color(0xFFE3E1E1)) }
     var barAverageColor by remember { mutableStateOf(Color(0xFFE3E1E1)) }
@@ -166,7 +166,7 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
                 if (currentTrack != null) {
                     Box(contentAlignment = Alignment.Center) {
                         SubcomposeAsyncImage(
-                            model = BASEURL + currentTrack!!.imageUrl,
+                            model =  currentTrack!!.imageUrl,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier

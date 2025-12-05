@@ -88,7 +88,7 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart){
         Text(
             text = "Вся музыка",
-            modifier = Modifier.padding(top = 25.dp, start = 16.dp).blur(1.dp),
+            modifier = Modifier.padding(top = 60.dp, start = 16.dp).blur(1.dp),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
         )
@@ -98,7 +98,7 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
             )
         }
         else {
-            LazyColumn (modifier = Modifier.padding(top=60.dp)){
+            LazyColumn (modifier = Modifier.padding(top=100.dp)){
                 items(queue.tracks.size) { index ->
                     val track = queue.tracks[index]
                     val isCurrent=track.id==currentTrack?.id
@@ -110,7 +110,7 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
                             modifier = Modifier.clickable { homeVM.play(playerVM,track) }) {
                             Box(contentAlignment = Alignment.Center) {
                                 SubcomposeAsyncImage(
-                                    model = BASEURL + track.imageUrl,
+                                    model =   track.imageUrl,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
@@ -156,8 +156,10 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
                         }
                     }
                 }
+                item {
+                    Spacer(modifier = Modifier.height(165.dp))
+                }
             }
-            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }

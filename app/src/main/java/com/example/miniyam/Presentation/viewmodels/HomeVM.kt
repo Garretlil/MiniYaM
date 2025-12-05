@@ -58,7 +58,7 @@ class HomeViewModel @Inject constructor(
             if (token.isNotEmpty()) {
                 val tracks = remoteMusic.getTracks(token)
                 _homeQueue.update { current ->
-                    current.copy(tracks = tracks.map { it.copy(url = BASEURL+it.url)})
+                    current.copy(tracks = tracks.map { it.copy(url =it.url)})
                 }
             }
         }

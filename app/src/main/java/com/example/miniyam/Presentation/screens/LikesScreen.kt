@@ -1,6 +1,7 @@
 package com.example.miniyam.Presentation.screens
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,8 +42,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,25 +65,107 @@ import com.example.miniyam.Presentation.viewmodels.SearchStates
 import com.example.miniyam.R
 
 @Composable
-fun GradientRoundedContainer(
+fun GradientRoundedContainerCanvas(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
-    Row(
+    val shape = RoundedCornerShape(20.dp)
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF6A11CB), Color(0xFF0D439D))
-                ),
-                shape = RoundedCornerShape(16.dp)
+            .clip(shape)
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+
+            val w = size.width
+            val h = size.height
+
+            drawRect(
+                topLeft = Offset(0f, 0f),
+                size = Size(w, h),
+                color = Color(0xFF05A821)
             )
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        content = content
-    )
+
+            val composePath = Path().apply {
+                moveTo(0f, h * 0.7f)
+                quadraticBezierTo(
+                    w * 0.1f, h * 0.9f,
+                    w * 0.25f, h * 0.6f
+                )
+            }
+
+            val androidPath = android.graphics.Path().apply {
+                addPath(composePath.asAndroidPath())
+            }
+
+            val glowPaint = android.graphics.Paint().apply {
+                isAntiAlias = true
+                style = android.graphics.Paint.Style.STROKE
+                strokeWidth = 3f
+
+                shader = android.graphics.LinearGradient(
+                    0f, h * 0.7f,
+                    w * 0.25f, h * 0.6f,
+                    intArrayOf(
+                        Color.White.copy(alpha = 0.5f).toArgb(),
+                        Color.White.copy(alpha = 0.05f).toArgb(),
+                        Color.Transparent.toArgb()
+                    ),
+                    floatArrayOf(0f, 0.5f, 1f),
+                    android.graphics.Shader.TileMode.CLAMP
+                )
+
+                maskFilter = android.graphics.BlurMaskFilter(
+                    15f,
+                    android.graphics.BlurMaskFilter.Blur.NORMAL
+                )
+            }
+
+            val colorLight = Color(0xFFDFE8E0)
+
+            val linePaint = android.graphics.Paint().apply {
+                isAntiAlias = true
+                style = android.graphics.Paint.Style.STROKE
+                strokeWidth = 3f
+
+                shader = android.graphics.LinearGradient(
+                    0f, h * 0.7f,
+                    w * 0.25f, h * 0.6f,
+                    intArrayOf(
+                        colorLight.copy(alpha = 0.5f).toArgb(),
+                        colorLight.copy(alpha = 0.1f).toArgb(),
+                        Color.Transparent.toArgb()
+                    ),
+                    floatArrayOf(0f, 0.7f, 1f),
+                    android.graphics.Shader.TileMode.CLAMP
+                )
+
+                maskFilter = android.graphics.BlurMaskFilter(
+                    5f,
+                    android.graphics.BlurMaskFilter.Blur.NORMAL
+                )
+            }
+
+            drawContext.canvas.nativeCanvas.apply {
+                save()
+                drawPath(androidPath, glowPaint)
+                drawPath(androidPath, linePaint)
+                restore()
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            content = content
+        )
+    }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyLikesAppBar() {
@@ -128,7 +217,7 @@ fun LikesScreen(playerVM: PlayerViewModel, likesVM: LikesViewModel) {
     ) {
         MyLikesAppBar()
 
-        GradientRoundedContainer(
+        GradientRoundedContainerCanvas(
             modifier = Modifier
                 .height(70.dp).padding(horizontal = 16.dp)
         ) {
@@ -141,7 +230,8 @@ fun LikesScreen(playerVM: PlayerViewModel, likesVM: LikesViewModel) {
                 ) {
                     Text(
                         text = "My Vibe for",
-                        color = Color.White
+                        color = Color.White,
+                        fontWeight = FontWeight.W600
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically
@@ -178,7 +268,7 @@ fun LikesScreen(playerVM: PlayerViewModel, likesVM: LikesViewModel) {
                 )
                 Text(
                     "color",
-                    color = Color(0xFF2439B4),
+                    color = Color(0xFF2DB93D),
                     fontWeight = FontWeight.W700
                 )
             }
@@ -230,7 +320,7 @@ fun LikesScreen(playerVM: PlayerViewModel, likesVM: LikesViewModel) {
                                 modifier = Modifier.clickable { likesVM.play(playerVM, track) }) {
                                 Box(contentAlignment = Alignment.Center) {
                                     SubcomposeAsyncImage(
-                                        model = BASEURL + track.imageUrl,
+                                        model =  track.imageUrl,
                                         contentDescription = null,
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier

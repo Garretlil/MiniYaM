@@ -121,7 +121,7 @@ fun ExpandedPlayerWithSlideAnimation(onCollapse: () -> Unit,viewModel: PlayerVie
         val currentTrack by viewModel.currentTrack.collectAsState()
         val isPlaying = viewModel.isTrackPlaying
         val currentDuration = viewModel.currentPosSec
-        val imageUrl = BASEURL + currentTrack?.imageUrl
+        val imageUrl =  currentTrack?.imageUrl
         var trackAverageColor by remember { mutableStateOf(Color(0xFFD2D2D2)) }
         var barAverageColor by remember { mutableStateOf(Color(0xFFB0B0B0)) }
         var backAvColor by remember { mutableStateOf(Color(0xFFB0B0B0)) }
@@ -215,7 +215,7 @@ fun ExpandedPlayerWithSlideAnimation(onCollapse: () -> Unit,viewModel: PlayerVie
                         contentAlignment = Alignment.Center
                     ) {
                         SubcomposeAsyncImage(
-                            model = BASEURL + currentTrack!!.imageUrl,
+                            model =  currentTrack!!.imageUrl,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
@@ -245,7 +245,7 @@ fun ExpandedPlayerWithSlideAnimation(onCollapse: () -> Unit,viewModel: PlayerVie
                 ) {
                     if (currentTrack != null) {
                         SubcomposeAsyncImage(
-                            model = BASEURL + currentTrack!!.imageUrl,
+                            model =  currentTrack!!.imageUrl,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier

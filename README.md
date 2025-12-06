@@ -6,5 +6,5 @@ Now it's parsing a local memory for music files and projecting it on UI with bea
 
 
 <img width="383" height="809" alt="" src="img_2.png" />
+<img width="383" height="809" alt="" src="img_4.png" />
 
-<img width="383" height="809" alt="" src="img_3.png" />

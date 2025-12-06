@@ -1,6 +1,8 @@
 package com.example.miniyam.Presentation.screens
 
 import android.annotation.SuppressLint
+import android.graphics.BlurMaskFilter
+import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -65,6 +67,264 @@ import com.example.miniyam.Presentation.viewmodels.SearchStates
 import com.example.miniyam.R
 
 @Composable
+fun GlowLineLeft(){
+    Canvas(modifier = Modifier.fillMaxSize()) {
+
+        val w = size.width
+        val h = size.height
+
+        drawRect(
+            topLeft = Offset(0f, 0f),
+            size = Size(w, h),
+            color = Color(0xFF41B626)
+        )
+
+        val composePath = Path().apply {
+            moveTo(0f, h * 0.7f)
+            quadraticBezierTo(
+                w * 0.1f, h * 0.9f,
+                w * 0.25f, h * 0.6f
+            )
+        }
+
+        val androidPath = android.graphics.Path().apply {
+            addPath(composePath.asAndroidPath())
+        }
+
+        val glowPaint = Paint().apply {
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.STROKE
+
+            strokeWidth = 3f
+
+            shader = android.graphics.LinearGradient(
+                0f, h * 0.5f,
+                w *0.3f, h ,
+                intArrayOf(
+                    Color.White.copy(alpha = 0.9f).toArgb(),
+                    Color.White.copy(alpha = 0.9f).toArgb(),
+                    Color.Transparent.toArgb()
+                ),
+                floatArrayOf(0f, 0.5f, 1f),
+                android.graphics.Shader.TileMode.CLAMP
+            )
+
+
+            maskFilter = android.graphics.BlurMaskFilter(
+                30f,
+                android.graphics.BlurMaskFilter.Blur.NORMAL
+            )
+        }
+        val colorLight=Color(0xFFDFE8E0)
+        val linePaint = Paint().apply {
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = 3f
+
+            shader = android.graphics.LinearGradient(
+                0f, h * 0.7f,
+                w * 0.25f, h * 0.6f,
+                intArrayOf(
+                    colorLight.copy(0.5f).toArgb(),
+                    colorLight.copy(alpha = 0.1f).toArgb(),
+                    Color.Transparent.toArgb()
+                ),
+                floatArrayOf(0f, 0.7f, 1f),
+                android.graphics.Shader.TileMode.CLAMP
+            )
+
+
+            maskFilter = android.graphics.BlurMaskFilter(
+                5f,
+                android.graphics.BlurMaskFilter.Blur.NORMAL
+            )
+        }
+        val diffuseGlowPaint = Paint().apply {
+            isAntiAlias = true
+            style = Paint.Style.STROKE
+            strokeWidth = 20f
+            color = Color.White.copy(alpha = 0.3f).toArgb()
+            maskFilter = BlurMaskFilter(40f, BlurMaskFilter.Blur.NORMAL)
+        }
+
+
+        drawContext.canvas.nativeCanvas.apply {
+            save()
+            drawPath(androidPath, diffuseGlowPaint)
+            drawPath(androidPath, glowPaint)
+            drawPath(androidPath, linePaint)
+            restore()
+        }
+    }
+}
+@Composable
+fun GlowLineCenter(){
+    Canvas(modifier = Modifier.fillMaxSize()) {
+
+        val w = size.width
+        val h = size.height
+
+        val composePath = Path().apply {
+            moveTo(w*0.3f, h * 0.99f)
+            quadraticBezierTo(
+                w * 0.45f, h * 0.7f,
+                w * 0.6f, h
+            )
+        }
+
+        val androidPath = android.graphics.Path().apply {
+            addPath(composePath.asAndroidPath())
+        }
+
+        val glowPaint = Paint().apply {
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = 2f
+
+            shader = android.graphics.LinearGradient(
+                w*0.7f, h*0.99f,
+                w *0.4f, h*0.7f ,
+                intArrayOf(
+                    Color.White.copy(alpha = 0.7f).toArgb(),
+                    Color.White.copy(alpha = 0.7f).toArgb(),
+                    Color.Transparent.toArgb()
+                ),
+                floatArrayOf(0f, 0.7f,1f),
+                android.graphics.Shader.TileMode.CLAMP
+            )
+
+            maskFilter = android.graphics.BlurMaskFilter(
+                15f,
+                android.graphics.BlurMaskFilter.Blur.NORMAL
+            )
+        }
+        val colorLight=Color(0xFFDFE8E0)
+        val linePaint = Paint().apply {
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = 3f
+
+            shader = android.graphics.LinearGradient(
+                w*0.7f, h*0.99f,
+                w *0.2f, h*0.7f ,
+                intArrayOf(
+                    colorLight.copy(0.7f).toArgb(),
+                    colorLight.copy(alpha = 0.1f).toArgb(),
+                    Color.Transparent.toArgb()
+                ),
+                floatArrayOf(0f, 0.6f, 1f),
+                android.graphics.Shader.TileMode.CLAMP
+            )
+
+
+            maskFilter = android.graphics.BlurMaskFilter(
+                5f,
+                android.graphics.BlurMaskFilter.Blur.NORMAL
+            )
+        }
+        val diffuseGlowPaint = Paint().apply {
+            isAntiAlias = true
+            style = Paint.Style.STROKE
+            strokeWidth = 25f
+            color = Color.White.copy(alpha = 0.3f).toArgb()
+            maskFilter = BlurMaskFilter(40f, BlurMaskFilter.Blur.NORMAL)
+        }
+
+
+        drawContext.canvas.nativeCanvas.apply {
+            save()
+            drawPath(androidPath, diffuseGlowPaint)
+            drawPath(androidPath, glowPaint)
+            drawPath(androidPath, linePaint)
+            restore()
+        }
+    }
+}
+@Composable
+fun GlowLineRight(){
+    Canvas(modifier = Modifier.fillMaxSize()) {
+
+        val w = size.width
+        val h = size.height
+
+        val composePath = Path().apply {
+            moveTo(w*1f, h * 0.55f)
+            quadraticBezierTo(
+                w * 0.85f, h * 0.2f,
+                w * 0.75f, 0.53f*h
+            )
+        }
+
+        val androidPath = android.graphics.Path().apply {
+            addPath(composePath.asAndroidPath())
+        }
+
+        val glowPaint = Paint().apply {
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = 2f
+
+            shader = android.graphics.LinearGradient(
+                w*1f, h*0.55f,
+                w *0.75f, 0.53f*h,
+                intArrayOf(
+                    Color.White.copy(alpha = 0.7f).toArgb(),
+                    Color.White.copy(alpha = 0.1f).toArgb(),
+                    Color.Transparent.toArgb()
+                ),
+                floatArrayOf(0f, 0.7f,1f),
+                android.graphics.Shader.TileMode.CLAMP
+            )
+
+            maskFilter = android.graphics.BlurMaskFilter(
+                15f,
+                android.graphics.BlurMaskFilter.Blur.NORMAL
+            )
+        }
+        val colorLight=Color(0xFFDFE8E0)
+        val linePaint = Paint().apply {
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = 3f
+
+            shader = android.graphics.LinearGradient(
+                w*1f, h*0.55f,
+                w *0.75f, 0.53f*h,
+                intArrayOf(
+                    colorLight.copy(0.7f).toArgb(),
+                    colorLight.copy(alpha = 0.1f).toArgb(),
+                    Color.Transparent.toArgb()
+                ),
+                floatArrayOf(0f, 0.99f, 1f),
+                android.graphics.Shader.TileMode.CLAMP
+            )
+
+
+            maskFilter = android.graphics.BlurMaskFilter(
+                5f,
+                android.graphics.BlurMaskFilter.Blur.NORMAL
+            )
+        }
+        val diffuseGlowPaint = Paint().apply {
+            isAntiAlias = true
+            style = Paint.Style.STROKE
+            strokeWidth = 25f
+            color = Color.White.copy(alpha = 0.3f).toArgb()
+            maskFilter = BlurMaskFilter(40f, BlurMaskFilter.Blur.NORMAL)
+        }
+
+        drawContext.canvas.nativeCanvas.apply {
+            save()
+            drawPath(androidPath, diffuseGlowPaint)
+            drawPath(androidPath, glowPaint)
+            drawPath(androidPath, linePaint)
+            restore()
+        }
+
+    }
+}
+
+@Composable
 fun GradientRoundedContainerCanvas(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
@@ -76,84 +336,9 @@ fun GradientRoundedContainerCanvas(
             .fillMaxWidth()
             .clip(shape)
     ) {
-        Canvas(modifier = Modifier.matchParentSize()) {
-
-            val w = size.width
-            val h = size.height
-
-            drawRect(
-                topLeft = Offset(0f, 0f),
-                size = Size(w, h),
-                color = Color(0xFF05A821)
-            )
-
-            val composePath = Path().apply {
-                moveTo(0f, h * 0.7f)
-                quadraticBezierTo(
-                    w * 0.1f, h * 0.9f,
-                    w * 0.25f, h * 0.6f
-                )
-            }
-
-            val androidPath = android.graphics.Path().apply {
-                addPath(composePath.asAndroidPath())
-            }
-
-            val glowPaint = android.graphics.Paint().apply {
-                isAntiAlias = true
-                style = android.graphics.Paint.Style.STROKE
-                strokeWidth = 3f
-
-                shader = android.graphics.LinearGradient(
-                    0f, h * 0.7f,
-                    w * 0.25f, h * 0.6f,
-                    intArrayOf(
-                        Color.White.copy(alpha = 0.5f).toArgb(),
-                        Color.White.copy(alpha = 0.05f).toArgb(),
-                        Color.Transparent.toArgb()
-                    ),
-                    floatArrayOf(0f, 0.5f, 1f),
-                    android.graphics.Shader.TileMode.CLAMP
-                )
-
-                maskFilter = android.graphics.BlurMaskFilter(
-                    15f,
-                    android.graphics.BlurMaskFilter.Blur.NORMAL
-                )
-            }
-
-            val colorLight = Color(0xFFDFE8E0)
-
-            val linePaint = android.graphics.Paint().apply {
-                isAntiAlias = true
-                style = android.graphics.Paint.Style.STROKE
-                strokeWidth = 3f
-
-                shader = android.graphics.LinearGradient(
-                    0f, h * 0.7f,
-                    w * 0.25f, h * 0.6f,
-                    intArrayOf(
-                        colorLight.copy(alpha = 0.5f).toArgb(),
-                        colorLight.copy(alpha = 0.1f).toArgb(),
-                        Color.Transparent.toArgb()
-                    ),
-                    floatArrayOf(0f, 0.7f, 1f),
-                    android.graphics.Shader.TileMode.CLAMP
-                )
-
-                maskFilter = android.graphics.BlurMaskFilter(
-                    5f,
-                    android.graphics.BlurMaskFilter.Blur.NORMAL
-                )
-            }
-
-            drawContext.canvas.nativeCanvas.apply {
-                save()
-                drawPath(androidPath, glowPaint)
-                drawPath(androidPath, linePaint)
-                restore()
-            }
-        }
+        GlowLineLeft()
+        GlowLineCenter()
+        GlowLineRight()
 
         Row(
             modifier = Modifier

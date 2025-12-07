@@ -2,7 +2,9 @@ package com.example.miniyam.Presentation.screens
 
 import android.annotation.SuppressLint
 import android.graphics.BlurMaskFilter
+import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Shader
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,7 +12,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -21,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowCircleDown
@@ -42,11 +42,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asAndroidPath
@@ -59,15 +57,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
-import com.example.miniyam.BASEURL
-import com.example.miniyam.Domain.Track
 import com.example.miniyam.Presentation.PlayerViewModel
 import com.example.miniyam.Presentation.viewmodels.LikesViewModel
 import com.example.miniyam.Presentation.viewmodels.SearchStates
 import com.example.miniyam.R
 
+fun getDiffuse(colorD:Int) = Paint().apply {
+    isAntiAlias = true
+    style = Paint.Style.STROKE
+    strokeWidth = 30f
+    color = colorD
+    maskFilter = BlurMaskFilter(70f, BlurMaskFilter.Blur.NORMAL)
+}
+
+
 @Composable
-fun GlowLineLeft(){
+fun GlowLineLeft(diffuseColor: Color) {
     Canvas(modifier = Modifier.fillMaxSize()) {
 
         val w = size.width
@@ -76,7 +81,7 @@ fun GlowLineLeft(){
         drawRect(
             topLeft = Offset(0f, 0f),
             size = Size(w, h),
-            color = Color(0xFF41B626)
+            color = Color(0xFF12A619)
         )
 
         val composePath = Path().apply {
@@ -110,12 +115,11 @@ fun GlowLineLeft(){
             )
 
 
-            maskFilter = android.graphics.BlurMaskFilter(
+            maskFilter = BlurMaskFilter(
                 30f,
                 android.graphics.BlurMaskFilter.Blur.NORMAL
             )
         }
-        val colorLight=Color(0xFFDFE8E0)
         val linePaint = Paint().apply {
             isAntiAlias = true
             style = android.graphics.Paint.Style.STROKE
@@ -125,8 +129,8 @@ fun GlowLineLeft(){
                 0f, h * 0.7f,
                 w * 0.25f, h * 0.6f,
                 intArrayOf(
-                    colorLight.copy(0.5f).toArgb(),
-                    colorLight.copy(alpha = 0.1f).toArgb(),
+                    diffuseColor.copy(0.5f).toArgb(),
+                    diffuseColor.copy(alpha = 0.1f).toArgb(),
                     Color.Transparent.toArgb()
                 ),
                 floatArrayOf(0f, 0.7f, 1f),
@@ -134,19 +138,13 @@ fun GlowLineLeft(){
             )
 
 
-            maskFilter = android.graphics.BlurMaskFilter(
+            maskFilter =BlurMaskFilter(
                 5f,
                 android.graphics.BlurMaskFilter.Blur.NORMAL
             )
         }
-        val diffuseGlowPaint = Paint().apply {
-            isAntiAlias = true
-            style = Paint.Style.STROKE
-            strokeWidth = 20f
-            color = Color.White.copy(alpha = 0.3f).toArgb()
-            maskFilter = BlurMaskFilter(40f, BlurMaskFilter.Blur.NORMAL)
-        }
 
+        val diffuseGlowPaint= getDiffuse(diffuseColor.toArgb())
 
         drawContext.canvas.nativeCanvas.apply {
             save()
@@ -158,7 +156,7 @@ fun GlowLineLeft(){
     }
 }
 @Composable
-fun GlowLineCenter(){
+fun GlowLineCenter(diffuseColor: Color) {
     Canvas(modifier = Modifier.fillMaxSize()) {
 
         val w = size.width
@@ -193,12 +191,11 @@ fun GlowLineCenter(){
                 android.graphics.Shader.TileMode.CLAMP
             )
 
-            maskFilter = android.graphics.BlurMaskFilter(
+            maskFilter = BlurMaskFilter(
                 15f,
                 android.graphics.BlurMaskFilter.Blur.NORMAL
             )
         }
-        val colorLight=Color(0xFFDFE8E0)
         val linePaint = Paint().apply {
             isAntiAlias = true
             style = android.graphics.Paint.Style.STROKE
@@ -208,8 +205,8 @@ fun GlowLineCenter(){
                 w*0.7f, h*0.99f,
                 w *0.2f, h*0.7f ,
                 intArrayOf(
-                    colorLight.copy(0.7f).toArgb(),
-                    colorLight.copy(alpha = 0.1f).toArgb(),
+                    diffuseColor.copy(0.5f).toArgb(),
+                    diffuseColor.copy(alpha = 0.1f).toArgb(),
                     Color.Transparent.toArgb()
                 ),
                 floatArrayOf(0f, 0.6f, 1f),
@@ -222,14 +219,8 @@ fun GlowLineCenter(){
                 android.graphics.BlurMaskFilter.Blur.NORMAL
             )
         }
-        val diffuseGlowPaint = Paint().apply {
-            isAntiAlias = true
-            style = Paint.Style.STROKE
-            strokeWidth = 25f
-            color = Color.White.copy(alpha = 0.3f).toArgb()
-            maskFilter = BlurMaskFilter(40f, BlurMaskFilter.Blur.NORMAL)
-        }
 
+        val diffuseGlowPaint= getDiffuse(diffuseColor.toArgb())
 
         drawContext.canvas.nativeCanvas.apply {
             save()
@@ -241,7 +232,7 @@ fun GlowLineCenter(){
     }
 }
 @Composable
-fun GlowLineRight(){
+fun GlowLineRight(diffuseColor: Color) {
     Canvas(modifier = Modifier.fillMaxSize()) {
 
         val w = size.width
@@ -276,12 +267,11 @@ fun GlowLineRight(){
                 android.graphics.Shader.TileMode.CLAMP
             )
 
-            maskFilter = android.graphics.BlurMaskFilter(
+            maskFilter = BlurMaskFilter(
                 15f,
                 android.graphics.BlurMaskFilter.Blur.NORMAL
             )
         }
-        val colorLight=Color(0xFFDFE8E0)
         val linePaint = Paint().apply {
             isAntiAlias = true
             style = android.graphics.Paint.Style.STROKE
@@ -291,8 +281,8 @@ fun GlowLineRight(){
                 w*1f, h*0.55f,
                 w *0.75f, 0.53f*h,
                 intArrayOf(
-                    colorLight.copy(0.7f).toArgb(),
-                    colorLight.copy(alpha = 0.1f).toArgb(),
+                    diffuseColor.copy(0.5f).toArgb(),
+                    diffuseColor.copy(alpha = 0.1f).toArgb(),
                     Color.Transparent.toArgb()
                 ),
                 floatArrayOf(0f, 0.99f, 1f),
@@ -305,13 +295,8 @@ fun GlowLineRight(){
                 android.graphics.BlurMaskFilter.Blur.NORMAL
             )
         }
-        val diffuseGlowPaint = Paint().apply {
-            isAntiAlias = true
-            style = Paint.Style.STROKE
-            strokeWidth = 25f
-            color = Color.White.copy(alpha = 0.3f).toArgb()
-            maskFilter = BlurMaskFilter(40f, BlurMaskFilter.Blur.NORMAL)
-        }
+
+        val diffuseGlowPaint= getDiffuse(diffuseColor.toArgb())
 
         drawContext.canvas.nativeCanvas.apply {
             save()
@@ -324,6 +309,7 @@ fun GlowLineRight(){
     }
 }
 
+
 @Composable
 fun GradientRoundedContainerCanvas(
     modifier: Modifier = Modifier,
@@ -335,10 +321,12 @@ fun GradientRoundedContainerCanvas(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
+
     ) {
-        GlowLineLeft()
-        GlowLineCenter()
-        GlowLineRight()
+        val diffuseColor=Color(0xFF2EFF00)
+        GlowLineLeft(diffuseColor)
+        GlowLineCenter(diffuseColor)
+        GlowLineRight(diffuseColor)
 
         Row(
             modifier = Modifier

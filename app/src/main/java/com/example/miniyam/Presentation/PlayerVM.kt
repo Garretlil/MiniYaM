@@ -15,9 +15,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
-import com.example.miniyam.Domain.PlayerManager
-import com.example.miniyam.Domain.RemoteMusic
+import com.example.miniyam.Domain.managers.PlayerManager
+import com.example.miniyam.Data.repository.RemoteMusic
 import com.example.miniyam.Domain.Track
+import com.example.miniyam.Domain.managers.LikesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +41,7 @@ class PlayerViewModel @Inject constructor(
     private val remoteMusic: RemoteMusic,
     private val playerManager: PlayerManager,
     private val sharedPreferences: SharedPreferences,
+    private val likesManager: LikesManager
 ) : ViewModel() {
 
     private val _currentQueue = MutableStateFlow(QueueState("main",emptyList(),0))
@@ -209,6 +211,7 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             val response = remoteMusic.likeTrack(track.id, sharedPreferences.getString("token", "") ?: "")
             val currentTracks = currentQueue.value.tracks.toMutableList()
+            likesManager.likeTrack(track)
             val trackIndex = currentTracks.indexOfFirst { it.id == track.id }
             if (trackIndex != -1) {
                 currentTracks[trackIndex] = currentTracks[trackIndex].copy(

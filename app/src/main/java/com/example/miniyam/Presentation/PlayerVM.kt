@@ -36,7 +36,7 @@ data class QueueState(
     val currentIndex: Int
 )
 
-fun compareQueue(queue:List<Track>, mainQueue:List<Track>):Boolean{
+fun compareQueue(queue:List<Track>, mainQueue:List<Track>):Boolean {
     return queue==mainQueue
 }
 

@@ -23,6 +23,8 @@ junit = "4.13.2"
 retrofit = "2.11.0"
 retrofitCoroutinesAdapter = "0.9.2"
 blurview = "2.0.3"
+playServicesCastFramework = "22.2.0"
+media = "1.6.0"
 
 
 [libraries]
@@ -61,6 +63,8 @@ blurview = { module = "com.github.Dimezis:BlurView", version.ref = "blurview" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+play-services-cast-framework = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "playServicesCastFramework" }
+androidx-media = { group = "androidx.media", name = "media", version.ref = "media" }
 
 [plugins]
 android-application = { id = "com.android.application", version = "8.4.1" }

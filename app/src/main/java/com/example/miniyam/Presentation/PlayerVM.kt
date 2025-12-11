@@ -20,9 +20,13 @@ import com.example.miniyam.Data.repository.RemoteMusic
 import com.example.miniyam.Domain.Track
 import com.example.miniyam.Domain.managers.LikesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.math.sqrt
 
@@ -49,9 +53,6 @@ class PlayerViewModel @Inject constructor(
     private val _heights = MutableStateFlow(List(5) { 5.dp })
     val heights: StateFlow<List<Dp>> = _heights
     private var visualizer: Visualizer? = null
-
-    private val _isTrackLiked= MutableStateFlow<Boolean>(true)
-
 
 
     @OptIn(UnstableApi::class)
@@ -227,6 +228,49 @@ class PlayerViewModel @Inject constructor(
             }
         }
     }
+
+    private var timerJob: Job? = null
+    private val _remainingTime = MutableStateFlow(0L)
+    private val _isTimerOn=MutableStateFlow<Boolean>(false)
+
+
+    val isTimerOn: StateFlow<Boolean> = _isTimerOn
+    val remainingTime: StateFlow<Long> = _remainingTime
+
+    fun startTimer(durationMillis: Long) {
+        if (timerJob?.isActive == true) {
+            timerJob?.cancel()
+            _isTimerOn.value = false
+            _remainingTime.value = 0
+            return
+        }
+        timerJob = viewModelScope.launch {
+            _isTimerOn.value = true
+            val startTime = System.currentTimeMillis()
+            val endTime = startTime + durationMillis
+
+            while (true) {
+                val now = System.currentTimeMillis()
+                val left = (endTime - now).coerceAtLeast(0L)
+                _remainingTime.value = left
+                if (left <= 0L) break
+                delay(100L)
+            }
+
+            _isTimerOn.value = false
+            _remainingTime.value = 0
+
+            withContext(Dispatchers.Main) {
+                finishTimer()
+            }
+        }
+    }
+
+    private fun finishTimer() {
+        pause()
+        isTrackPlaying = false
+    }
+
 
     override fun onCleared() {
         super.onCleared()

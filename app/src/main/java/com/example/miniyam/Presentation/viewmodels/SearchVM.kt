@@ -78,7 +78,7 @@ class SearchViewModel @Inject constructor(
             val tracks = remoteMusic.searchTracks(query)
 
             _rawSearchQueue.update { current ->
-                current.copy(tracks = tracks.map { it.copy(url = BASEURL + it.url) })
+                current.copy(tracks = tracks.map { it.copy(url =  it.url) })
             }
 
             isLoading = SearchStates.LOADED

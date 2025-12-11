@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.androidx.foundation.android)
     implementation(libs.coil.compose)
 
+    implementation ("androidx.media3:media3-session:1.8.0")
+
     implementation(platform("androidx.compose:compose-bom:2024.04.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
@@ -79,6 +81,9 @@ dependencies {
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 
     implementation("com.google.dagger:hilt-android:2.52")
+    implementation(libs.play.services.cast.framework)
+    implementation(libs.androidx.media)
+    implementation(libs.androidx.media3.ui)
     kapt("com.google.dagger:hilt-compiler:2.52")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 

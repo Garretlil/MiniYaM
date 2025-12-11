@@ -60,7 +60,8 @@ fun SearchBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp).padding(start = 16.dp, end = 16.dp, top = 30.dp)
+            .height(80.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 30.dp)
             .background(
                 color = Color(0xFFEAE8E8),
                 shape = RoundedCornerShape(25.dp)
@@ -139,7 +140,9 @@ fun SearchScreen(playerVM: PlayerViewModel, searchVM: SearchViewModel){
         onSearch = {searchVM.searchTracks(searchQuery) }
     )
 
-    Box(modifier = Modifier.fillMaxSize().padding(vertical = 20.dp), contentAlignment = Alignment.TopStart){
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .padding(vertical = 20.dp), contentAlignment = Alignment.TopStart){
 
         if (isLoading== SearchStates.LOADING){
             CircularProgressIndicator(
@@ -159,12 +162,13 @@ fun SearchScreen(playerVM: PlayerViewModel, searchVM: SearchViewModel){
                             modifier = Modifier.clickable { searchVM.play(playerVM,track) }) {
                             Box(contentAlignment = Alignment.Center) {
                                 SubcomposeAsyncImage(
-                                    model = BASEURL + track.imageUrl,
+                                    model = track.imageUrl,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .size(80.dp)
-                                        .padding(13.dp).clip(RoundedCornerShape(8.dp)),
+                                        .padding(13.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
                                     loading = {
                                         CircularProgressIndicator()
                                     },

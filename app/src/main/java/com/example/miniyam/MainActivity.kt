@@ -240,9 +240,9 @@ fun MainScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
+    Box(modifier = Modifier.fillMaxSize().background(color = Color(0xFFFFFEFE))) {
         Scaffold(
-            modifier = Modifier.fillMaxSize().background(Color.Transparent),
+            modifier = Modifier.fillMaxSize().background(color = Color(0xFFFFFEFE)),
             bottomBar = {
                 AnimatedVisibility(
                     visible = !isExpanded,
@@ -255,8 +255,8 @@ fun MainScreen(
                             .fillMaxWidth()
                             .clip(shape),
                         shape = shape,
-                        color = Color.Transparent,
-                        tonalElevation = 8.dp,
+                        tonalElevation = 2.dp,
+                        color = Color(0xFFFFFEFE)
                     ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
                             MiniPlayer(playerVM, onExpand = { isExpanded = true })

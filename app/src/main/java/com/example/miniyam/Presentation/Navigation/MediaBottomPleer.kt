@@ -247,11 +247,10 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
                     Spacer(modifier = Modifier.width(17.dp))
 
                 } else {
-                    Spacer(modifier = Modifier.width(30.dp))
-                    PerfectWaveDots()
+                    Spacer(modifier = Modifier.width(45.dp))
                     Spacer(modifier = Modifier.width(15.dp))
                     Text(
-                        text = "Пока ничего не воспроизводится",
+                        text = "",
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold

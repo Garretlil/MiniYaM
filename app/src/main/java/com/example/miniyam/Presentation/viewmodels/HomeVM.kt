@@ -6,18 +6,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.miniyam.BASEURL
 import com.example.miniyam.Data.repository.RemoteMusic
 import com.example.miniyam.Domain.Track
-import com.example.miniyam.Domain.managers.LikesManager
 import com.example.miniyam.Presentation.PlayerViewModel
 import com.example.miniyam.Presentation.QueueState
 import com.example.miniyam.Presentation.compareQueue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,58 +23,47 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val remoteMusic: RemoteMusic,
     private val sharedPreferences: SharedPreferences,
-    private val likesManager: LikesManager
-): ViewModel() {
+): ViewModel(){
 
-    private val _rawHomeQueue = MutableStateFlow(
-        QueueState("home", emptyList(), 0)
-    )
-
-    val homeQueue: StateFlow<QueueState> = combine(
-        _rawHomeQueue,
-        likesManager.likesTracks
-    ) { queue, likedTracks ->
-        val likedIds = likedTracks.map { it.id }.toSet()
-        queue.copy(
-            tracks = queue.tracks.map { t ->
-                t.copy(liked = t.id in likedIds)
-            }
-        )
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.Eagerly,
-        QueueState("home", emptyList(), 0)
-    )
+    private val _homeQueue = MutableStateFlow(QueueState("home", emptyList(), 0))
+    val homeQueue: StateFlow<QueueState> = _homeQueue
 
     var isLoading by mutableStateOf(SearchStates.NONE)
         private set
 
     fun play(playerVM: PlayerViewModel, track: Track){
-        if (compareQueue(_rawHomeQueue.value.tracks,playerVM.currentQueue.value.tracks)){
+        if (compareQueue(_homeQueue.value.tracks,playerVM.currentQueue.value.tracks)){
             playerVM.play(track)
-        } else {
-            val index = _rawHomeQueue.value.tracks.indexOf(track)
-            playerVM.setQueue(
-                QueueState(
-                    source = "home",
-                    tracks = _rawHomeQueue.value.tracks,
-                    currentIndex = index
-                )
-            )
         }
+        else{
+            if (track==playerVM.currentTrack.value){
+                playerVM.play(track)
+            }
+            else {
+                val index = _homeQueue.value.tracks.indexOf(track)
+                playerVM.setQueue(
+                    QueueState(
+                        source = "home",
+                        tracks = _homeQueue.value.tracks,
+                        currentIndex = index
+                    )
+                )
+            }
+        }
+
     }
 
-    fun loadTracks() {
+    init {
+        loadTracks()
+    }
+
+     fun loadTracks() {
         viewModelScope.launch {
-            val token = sharedPreferences.getString("token", "") ?: ""
-            if (token.isNotEmpty()) {
-                val tracks = remoteMusic.getTracks(token)
-                _rawHomeQueue.update { current ->
-                    current.copy(
-                        tracks = tracks.map { it.copy(url = it.url) }
-                    )
-                }
+            val tracks = remoteMusic.getTracks(sharedPreferences.getString("token", "") ?: "")
+            _homeQueue.update { current ->
+                current.copy(tracks = tracks.map { it.copy(url = it.url) })
             }
         }
     }
 }
+

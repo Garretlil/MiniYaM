@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.miniyam.BASEURL
 import com.example.miniyam.Data.repository.RemoteMusic
+import com.example.miniyam.Domain.Result
 import com.example.miniyam.Domain.Track
 import com.example.miniyam.Domain.managers.LikesManager
 import com.example.miniyam.Presentation.PlayerViewModel
@@ -19,10 +20,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import javax.inject.Inject
+import com.example.miniyam.Domain.safeCall
 
 enum class SearchStates{
-    NONE,LOADING,LOADED
+    NONE,LOADING,LOADED,ERROR
 }
 
 @HiltViewModel
@@ -54,6 +60,9 @@ class SearchViewModel @Inject constructor(
 
     var isLoading by mutableStateOf(SearchStates.NONE)
         private set
+    
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
 
     fun play(playerVM: PlayerViewModel, track: Track) {
         if (compareQueue(_rawSearchQueue.value.tracks, playerVM.currentQueue.value.tracks)) {
@@ -72,17 +81,58 @@ class SearchViewModel @Inject constructor(
     }
 
     fun searchTracks(query: String) {
+        if (query.isBlank()) {
+            errorMessage = "Поисковый запрос не может быть пустым"
+            return
+        }
+        
         viewModelScope.launch {
             isLoading = SearchStates.LOADING
+            errorMessage = null
 
-            val tracks = remoteMusic.searchTracks(query)
-
-            _rawSearchQueue.update { current ->
-                current.copy(tracks = tracks.map { it.copy(url =  it.url) })
+            val result = safeCall { remoteMusic.searchTracks(query) }
+            
+            when (result) {
+                is Result.Success -> {
+                    _rawSearchQueue.update { current ->
+                        current.copy(tracks = result.data.map { it.copy(url = it.url) })
+                    }
+                    isLoading = SearchStates.LOADED
+                }
+                is Result.Error -> {
+                    errorMessage = getErrorMessage(result.exception)
+                    isLoading = SearchStates.ERROR
+                    _rawSearchQueue.update { current ->
+                        current.copy(tracks = emptyList())
+                    }
+                }
+                is Result.Loading -> {
+                    isLoading = SearchStates.LOADING
+                }
             }
-
-            isLoading = SearchStates.LOADED
         }
+    }
+    
+    private fun getErrorMessage(exception: Throwable): String {
+        return when (exception) {
+            is UnknownHostException -> "Нет подключения к интернету"
+            is SocketTimeoutException -> "Превышено время ожидания. Попробуйте позже"
+            is IOException -> "Ошибка сети: ${exception.message ?: "Неизвестная ошибка"}"
+            is HttpException -> {
+                when (exception.code()) {
+                    401 -> "Необходима авторизация"
+                    403 -> "Доступ запрещен"
+                    404 -> "Ресурс не найден"
+                    500, 502, 503 -> "Ошибка сервера. Попробуйте позже"
+                    else -> "Ошибка сервера: ${exception.code()}"
+                }
+            }
+            else -> "Произошла ошибка: ${exception.message ?: "Неизвестная ошибка"}"
+        }
+    }
+    
+    fun clearError() {
+        errorMessage = null
     }
 }
 

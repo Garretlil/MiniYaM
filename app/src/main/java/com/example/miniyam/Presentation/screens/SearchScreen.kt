@@ -48,6 +48,7 @@ import com.example.miniyam.Presentation.PlayerViewModel
 import com.example.miniyam.Presentation.viewmodels.SearchStates
 import com.example.miniyam.Presentation.viewmodels.SearchViewModel
 import kotlin.collections.get
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun SearchBar(
@@ -133,6 +134,12 @@ fun SearchScreen(playerVM: PlayerViewModel, searchVM: SearchViewModel){
     val queue by searchVM.searchQueue.collectAsState()
     val currentTrack by playerVM.currentTrack.collectAsState()
     val isLoading by remember { searchVM::isLoading }
+    val errorMessage by remember { searchVM::errorMessage }
+
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+        }
+    }
 
     SearchBar(
         query = searchQuery,
@@ -142,75 +149,107 @@ fun SearchScreen(playerVM: PlayerViewModel, searchVM: SearchViewModel){
 
     Box(modifier = Modifier
         .fillMaxSize()
-        .padding(vertical = 20.dp), contentAlignment = Alignment.TopStart){
+        .padding(vertical = 20.dp), contentAlignment = Alignment.TopStart) {
 
-        if (isLoading== SearchStates.LOADING){
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-        else if(isLoading == SearchStates.LOADED) {
-            LazyColumn (modifier = Modifier.padding(top=80.dp)){
-                items(queue.tracks.size) { index ->
-                    val track = queue.tracks[index]
-                    val isCurrent=track.id== currentTrack?.id
-                    Box(modifier =
-                    if(isCurrent) Modifier.background(Color(0xFFEEEDED))
-                    else Modifier.background(Color.Transparent) ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { searchVM.play(playerVM,track) }) {
-                            Box(contentAlignment = Alignment.Center) {
-                                SubcomposeAsyncImage(
-                                    model = track.imageUrl,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .padding(13.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
-                                    loading = {
-                                        CircularProgressIndicator()
-                                    },
-                                    error = {
-                                        Text("Ошибка загрузки")
-                                    }
-                                )
-                                if (currentTrack?.id == track.id && playerVM.isTrackPlaying)
-                                    PulsingCircle()
+        when {
+            isLoading == SearchStates.LOADING -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            isLoading == SearchStates.ERROR -> {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = errorMessage ?: "Произошла ошибка",
+                        color = Color.Red,
+                        fontSize = 16.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    androidx.compose.material3.Button(
+                        onClick = {
+                            searchVM.clearError()
+                            if (searchQuery.isNotEmpty()) {
+                                searchVM.searchTracks(searchQuery)
                             }
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = track.title,
-                                    modifier = Modifier,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Text(
-                                    text = track.artist,
-                                    modifier = Modifier,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color(0xFF6E6E6E),
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Icon(
-                                Icons.Default.ArrowCircleDown, contentDescription = null,
-                                tint = Color(0xFF33961E), modifier = Modifier.size(25.dp)
-                            )
-                            Spacer(modifier = Modifier.width(15.dp))
-                            Text(
-                                text = getDuration(track.duration), fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold, color = Color(0xFF6E6E6E)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
                         }
+                    ) {
+                        Text("Повторить")
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(20.dp))
+
+            isLoading == SearchStates.LOADED -> {
+                LazyColumn(modifier = Modifier.padding(top = 80.dp)) {
+                    items(queue.tracks.size) { index ->
+                        val track = queue.tracks[index]
+                        val isCurrent = track.id == currentTrack?.id
+                        Box(
+                            modifier =
+                            if (isCurrent) Modifier.background(Color(0xFFEEEDED))
+                            else Modifier.background(Color.Transparent)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable { searchVM.play(playerVM, track) }) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    SubcomposeAsyncImage(
+                                        model = track.imageUrl,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .padding(13.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        loading = {
+                                            CircularProgressIndicator()
+                                        },
+                                        error = {
+                                            Text("Ошибка загрузки")
+                                        }
+                                    )
+                                    if (currentTrack?.id == track.id && playerVM.isTrackPlaying)
+                                        PulsingCircle()
+                                }
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = track.title,
+                                        modifier = Modifier,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(3.dp))
+                                    Text(
+                                        text = track.artist,
+                                        modifier = Modifier,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = Color(0xFF6E6E6E),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Icon(
+                                    Icons.Default.ArrowCircleDown, contentDescription = null,
+                                    tint = Color(0xFF33961E), modifier = Modifier.size(25.dp)
+                                )
+                                Spacer(modifier = Modifier.width(15.dp))
+                                Text(
+                                    text = getDuration(track.duration), fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold, color = Color(0xFF6E6E6E)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
 }

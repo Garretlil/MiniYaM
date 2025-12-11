@@ -3,12 +3,12 @@ package com.example.miniyam.Presentation.viewmodels
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.miniyam.Data.api.AuthService
 import com.example.miniyam.Data.model.Auth.LoginRequest
 import com.example.miniyam.Data.model.Auth.RegisterRequest
+import com.example.miniyam.Utils.SecurePreferencesHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -51,17 +51,15 @@ class RegAuthViewModel(application: Application): AndroidViewModel(application){
     }
 
     fun auth() {
-        val sharedPref = context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
         if (isReg.value){
-             register(sharedPref)
+             register()
         }
         else{
-            login(sharedPref)
+            login()
         }
-
     }
 
-    fun register(sharedPref: SharedPreferences) {
+    fun register() {
         viewModelScope.launch {
             try {
                 val result = AuthService.api.register(
@@ -71,9 +69,8 @@ class RegAuthViewModel(application: Application): AndroidViewModel(application){
                         password = password.value
                     )
                 )
-                sharedPref.edit()
-                    .putString("token", result.message)
-                    .apply()
+                // Используем безопасное сохранение токена
+                SecurePreferencesHelper.saveToken(context, result.message)
                 _successAuth.value = RegStates.OK
             } catch (e: HttpException) {
                 when (e.code()) {
@@ -87,7 +84,7 @@ class RegAuthViewModel(application: Application): AndroidViewModel(application){
         }
     }
 
-    fun login(sharedPref: SharedPreferences) {
+    fun login() {
         viewModelScope.launch {
             try {
                 val response = AuthService.api.login(LoginRequest(_email.value, _password.value))
@@ -98,7 +95,8 @@ class RegAuthViewModel(application: Application): AndroidViewModel(application){
                     null
                 }
                 if (!token.isNullOrBlank()) {
-                    sharedPref.edit().putString("token", token).apply()
+                    // Используем безопасное сохранение токена
+                    SecurePreferencesHelper.saveToken(context, token)
                 }
             } catch (e: HttpException) {
                 _successAuth.value = when (e.code()) {

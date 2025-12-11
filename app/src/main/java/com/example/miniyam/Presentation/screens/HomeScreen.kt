@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
@@ -85,79 +86,111 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
     val queue by homeVM.homeQueue.collectAsState()
     val currentTrack by playerVM.currentTrack.collectAsState()
     val isLoading by remember { homeVM::isLoading }
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart){
+    val errorMessage by remember { homeVM::errorMessage }
+    
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
         Text(
             text = "Вся музыка",
             modifier = Modifier.padding(top = 60.dp, start = 16.dp).blur(1.dp),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
         )
-        if (isLoading == SearchStates.LOADING){
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-        else {
-            LazyColumn (modifier = Modifier.padding(top=100.dp)){
-                items(queue.tracks.size) { index ->
-                    val track = queue.tracks[index]
-                    val isCurrent=track.id==currentTrack?.id
-                    Box(modifier =
-                         if(isCurrent) Modifier.background(Color(0xFFEEEDED))
-                         else Modifier.background(Color.Transparent) ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { homeVM.play(playerVM,track) }) {
-                            Box(contentAlignment = Alignment.Center) {
-                                SubcomposeAsyncImage(
-                                    model =   track.imageUrl,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .padding(13.dp).clip(RoundedCornerShape(8.dp)),
-                                    loading = {
-                                        CircularProgressIndicator()
-                                    },
-                                    error = {
-                                        Text("Ошибка загрузки")
-                                    }
-                                )
-                                if (currentTrack?.id == track.id && playerVM.isTrackPlaying)
-                                    PulsingCircle()
-                            }
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = track.title,
-                                    modifier = Modifier,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Text(
-                                    text = track.artist,
-                                    modifier = Modifier,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color(0xFF6E6E6E),
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Icon(
-                                Icons.Default.ArrowCircleDown, contentDescription = null,
-                                tint = Color(0xFF33961E), modifier = Modifier.size(25.dp)
-                            )
-                            Spacer(modifier = Modifier.width(15.dp))
-                            Text(
-                                text = getDuration(track.duration), fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold, color = Color(0xFF6E6E6E)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
+        when {
+            isLoading == SearchStates.LOADING -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            isLoading == SearchStates.ERROR -> {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = errorMessage ?: "Произошла ошибка",
+                        color = Color.Red,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    androidx.compose.material3.Button(
+                        onClick = {
+                            homeVM.clearError()
+                            homeVM.loadTracks()
                         }
+                    ) {
+                        Text("Повторить")
                     }
                 }
-                item {
-                    Spacer(modifier = Modifier.height(165.dp))
+            }
+
+            else -> {
+                LazyColumn(modifier = Modifier.padding(top = 100.dp)) {
+                    items(queue.tracks.size) { index ->
+                        val track = queue.tracks[index]
+                        val isCurrent = track.id == currentTrack?.id
+                        Box(
+                            modifier =
+                            if (isCurrent) Modifier.background(Color(0xFFEEEDED))
+                            else Modifier.background(Color.Transparent)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable { homeVM.play(playerVM, track) }) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    SubcomposeAsyncImage(
+                                        model = track.imageUrl,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .padding(13.dp).clip(RoundedCornerShape(8.dp)),
+                                        loading = {
+                                            CircularProgressIndicator()
+                                        },
+                                        error = {
+                                            Text("Ошибка загрузки")
+                                        }
+                                    )
+                                    if (currentTrack?.id == track.id && playerVM.isTrackPlaying)
+                                        PulsingCircle()
+                                }
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = track.title,
+                                        modifier = Modifier,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(3.dp))
+                                    Text(
+                                        text = track.artist,
+                                        modifier = Modifier,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = Color(0xFF6E6E6E),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Icon(
+                                    Icons.Default.ArrowCircleDown, contentDescription = null,
+                                    tint = Color(0xFF33961E), modifier = Modifier.size(25.dp)
+                                )
+                                Spacer(modifier = Modifier.width(15.dp))
+                                Text(
+                                    text = getDuration(track.duration), fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold, color = Color(0xFF6E6E6E)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                            }
+                        }
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(165.dp))
+                    }
                 }
             }
         }

@@ -6,6 +6,7 @@ import com.example.miniyam.Domain.managers.PlayerManager
 import com.example.miniyam.Data.repository.RemoteMusic
 import com.example.miniyam.Domain.managers.LikesManager
 import com.example.miniyam.Domain.repository.MusicRepository
+import com.example.miniyam.Utils.SecurePreferencesHelper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,7 +38,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
+        return SecurePreferencesHelper.getEncryptedSharedPreferences(context)
     }
 
     @Provides

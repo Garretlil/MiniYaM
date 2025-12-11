@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.miniyam.BASEURL
 import com.example.miniyam.Data.repository.RemoteMusic
 import com.example.miniyam.Domain.Track
+import com.example.miniyam.Domain.safeCall
 import com.example.miniyam.Presentation.PlayerViewModel
 import com.example.miniyam.Presentation.QueueState
 import com.example.miniyam.Presentation.compareQueue
@@ -17,6 +18,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,6 +34,9 @@ class HomeViewModel @Inject constructor(
     val homeQueue: StateFlow<QueueState> = _homeQueue
 
     var isLoading by mutableStateOf(SearchStates.NONE)
+        private set
+    
+    var errorMessage by mutableStateOf<String?>(null)
         private set
 
     fun play(playerVM: PlayerViewModel, track: Track){
@@ -57,13 +65,61 @@ class HomeViewModel @Inject constructor(
         loadTracks()
     }
 
-     fun loadTracks() {
+    fun loadTracks() {
         viewModelScope.launch {
-            val tracks = remoteMusic.getTracks(sharedPreferences.getString("token", "") ?: "")
-            _homeQueue.update { current ->
-                current.copy(tracks = tracks.map { it.copy(url = it.url) })
+            isLoading = SearchStates.LOADING
+            errorMessage = null
+            
+            val token = sharedPreferences.getString("token", "") ?: ""
+            if (token.isEmpty()) {
+                errorMessage = "Необходима авторизация"
+                isLoading = SearchStates.ERROR
+                return@launch
+            }
+            
+            val result = safeCall { remoteMusic.getTracks(token) }
+            
+            when (result) {
+                is com.example.miniyam.Domain.Result.Success -> {
+                    _homeQueue.update { current ->
+                        current.copy(tracks = result.data.map { it.copy(url = it.url) })
+                    }
+                    isLoading = SearchStates.LOADED
+                }
+                is com.example.miniyam.Domain.Result.Error -> {
+                    errorMessage = getErrorMessage(result.exception)
+                    isLoading = SearchStates.ERROR
+                    _homeQueue.update { current ->
+                        current.copy(tracks = emptyList())
+                    }
+                }
+                is com.example.miniyam.Domain.Result.Loading -> {
+                    isLoading = SearchStates.LOADING
+                }
             }
         }
+    }
+    
+    private fun getErrorMessage(exception: Throwable): String {
+        return when (exception) {
+            is UnknownHostException -> "Нет подключения к интернету"
+            is SocketTimeoutException -> "Превышено время ожидания. Попробуйте позже"
+            is IOException -> "Ошибка сети: ${exception.message ?: "Неизвестная ошибка"}"
+            is HttpException -> {
+                when (exception.code()) {
+                    401 -> "Требуется повторная авторизация"
+                    403 -> "Доступ запрещен"
+                    404 -> "Ресурс не найден"
+                    500, 502, 503 -> "Ошибка сервера. Попробуйте позже"
+                    else -> "Ошибка сервера: ${exception.code()}"
+                }
+            }
+            else -> "Произошла ошибка: ${exception.message ?: "Неизвестная ошибка"}"
+        }
+    }
+    
+    fun clearError() {
+        errorMessage = null
     }
 }
 

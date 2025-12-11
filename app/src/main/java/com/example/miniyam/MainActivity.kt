@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -60,6 +61,7 @@ import com.example.miniyam.Presentation.viewmodels.HomeViewModel
 import com.example.miniyam.Presentation.viewmodels.LikesViewModel
 import com.example.miniyam.Presentation.viewmodels.SearchViewModel
 import com.example.miniyam.ui.theme.MiniYaMTheme
+import com.example.miniyam.Utils.SecurePreferencesHelper
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -95,9 +97,6 @@ fun AppRoot(
     likesVM: LikesViewModel
 ) {
     val context = LocalContext.current
-    val sharedPref = remember {
-        context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
-    }
 
     val audioPermission = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
     val storagePermission = rememberPermissionState(
@@ -111,8 +110,8 @@ fun AppRoot(
     var showHome by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
-        val token = sharedPref.getString("token", "") ?: ""
-        //sharedPref.edit().putString("token","").apply()
+        // Используем безопасное получение токена
+        val token = SecurePreferencesHelper.getToken(context)
         showHome = token.isNotEmpty()
     }
 
@@ -137,7 +136,7 @@ fun AppRoot(
         }
         allPermissionsGranted -> {
             RegAuthScreen(onAuthSuccess = { 
-                val token = sharedPref.getString("token", "") ?: ""
+                val token = SecurePreferencesHelper.getToken(context)
                 showHome = token.isNotEmpty()
             })
         }

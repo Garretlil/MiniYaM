@@ -6,12 +6,14 @@ import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Shader
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -22,9 +24,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowCircleDown
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
@@ -38,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -57,257 +64,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import com.example.miniyam.Graphics.GlowLineCenter
+import com.example.miniyam.Graphics.GlowLineLeft
+import com.example.miniyam.Graphics.GlowLineRight
 import com.example.miniyam.Presentation.PlayerViewModel
 import com.example.miniyam.Presentation.viewmodels.LikesViewModel
 import com.example.miniyam.Presentation.viewmodels.SearchStates
 import com.example.miniyam.R
 
-fun getDiffuse(colorD:Int) = Paint().apply {
-    isAntiAlias = true
-    style = Paint.Style.STROKE
-    strokeWidth = 30f
-    color = colorD
-    maskFilter = BlurMaskFilter(70f, BlurMaskFilter.Blur.NORMAL)
-}
-
-
-@Composable
-fun GlowLineLeft(diffuseColor: Color) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-
-        val w = size.width
-        val h = size.height
-
-        drawRect(
-            topLeft = Offset(0f, 0f),
-            size = Size(w, h),
-            color = Color(0xFF12A619)
-        )
-
-        val composePath = Path().apply {
-            moveTo(0f, h * 0.7f)
-            quadraticBezierTo(
-                w * 0.1f, h * 0.9f,
-                w * 0.25f, h * 0.6f
-            )
-        }
-
-        val androidPath = android.graphics.Path().apply {
-            addPath(composePath.asAndroidPath())
-        }
-
-        val glowPaint = Paint().apply {
-            isAntiAlias = true
-            style = android.graphics.Paint.Style.STROKE
-
-            strokeWidth = 3f
-
-            shader = android.graphics.LinearGradient(
-                0f, h * 0.5f,
-                w *0.3f, h ,
-                intArrayOf(
-                    Color.White.copy(alpha = 0.9f).toArgb(),
-                    Color.White.copy(alpha = 0.9f).toArgb(),
-                    Color.Transparent.toArgb()
-                ),
-                floatArrayOf(0f, 0.5f, 1f),
-                android.graphics.Shader.TileMode.CLAMP
-            )
-
-
-            maskFilter = BlurMaskFilter(
-                30f,
-                android.graphics.BlurMaskFilter.Blur.NORMAL
-            )
-        }
-        val linePaint = Paint().apply {
-            isAntiAlias = true
-            style = android.graphics.Paint.Style.STROKE
-            strokeWidth = 3f
-
-            shader = android.graphics.LinearGradient(
-                0f, h * 0.7f,
-                w * 0.25f, h * 0.6f,
-                intArrayOf(
-                    diffuseColor.copy(0.5f).toArgb(),
-                    diffuseColor.copy(alpha = 0.1f).toArgb(),
-                    Color.Transparent.toArgb()
-                ),
-                floatArrayOf(0f, 0.7f, 1f),
-                android.graphics.Shader.TileMode.CLAMP
-            )
-
-
-            maskFilter =BlurMaskFilter(
-                5f,
-                android.graphics.BlurMaskFilter.Blur.NORMAL
-            )
-        }
-
-        val diffuseGlowPaint= getDiffuse(diffuseColor.toArgb())
-
-        drawContext.canvas.nativeCanvas.apply {
-            save()
-            drawPath(androidPath, diffuseGlowPaint)
-            drawPath(androidPath, glowPaint)
-            drawPath(androidPath, linePaint)
-            restore()
-        }
-    }
-}
-@Composable
-fun GlowLineCenter(diffuseColor: Color) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-
-        val w = size.width
-        val h = size.height
-
-        val composePath = Path().apply {
-            moveTo(w*0.3f, h * 0.99f)
-            quadraticBezierTo(
-                w * 0.45f, h * 0.7f,
-                w * 0.6f, h
-            )
-        }
-
-        val androidPath = android.graphics.Path().apply {
-            addPath(composePath.asAndroidPath())
-        }
-
-        val glowPaint = Paint().apply {
-            isAntiAlias = true
-            style = android.graphics.Paint.Style.STROKE
-            strokeWidth = 2f
-
-            shader = android.graphics.LinearGradient(
-                w*0.7f, h*0.99f,
-                w *0.4f, h*0.7f ,
-                intArrayOf(
-                    Color.White.copy(alpha = 0.7f).toArgb(),
-                    Color.White.copy(alpha = 0.7f).toArgb(),
-                    Color.Transparent.toArgb()
-                ),
-                floatArrayOf(0f, 0.7f,1f),
-                android.graphics.Shader.TileMode.CLAMP
-            )
-
-            maskFilter = BlurMaskFilter(
-                15f,
-                android.graphics.BlurMaskFilter.Blur.NORMAL
-            )
-        }
-        val linePaint = Paint().apply {
-            isAntiAlias = true
-            style = android.graphics.Paint.Style.STROKE
-            strokeWidth = 3f
-
-            shader = android.graphics.LinearGradient(
-                w*0.7f, h*0.99f,
-                w *0.2f, h*0.7f ,
-                intArrayOf(
-                    diffuseColor.copy(0.5f).toArgb(),
-                    diffuseColor.copy(alpha = 0.1f).toArgb(),
-                    Color.Transparent.toArgb()
-                ),
-                floatArrayOf(0f, 0.6f, 1f),
-                android.graphics.Shader.TileMode.CLAMP
-            )
-
-
-            maskFilter = android.graphics.BlurMaskFilter(
-                5f,
-                android.graphics.BlurMaskFilter.Blur.NORMAL
-            )
-        }
-
-        val diffuseGlowPaint= getDiffuse(diffuseColor.toArgb())
-
-        drawContext.canvas.nativeCanvas.apply {
-            save()
-            drawPath(androidPath, diffuseGlowPaint)
-            drawPath(androidPath, glowPaint)
-            drawPath(androidPath, linePaint)
-            restore()
-        }
-    }
-}
-@Composable
-fun GlowLineRight(diffuseColor: Color) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-
-        val w = size.width
-        val h = size.height
-
-        val composePath = Path().apply {
-            moveTo(w*1f, h * 0.55f)
-            quadraticBezierTo(
-                w * 0.85f, h * 0.2f,
-                w * 0.75f, 0.53f*h
-            )
-        }
-
-        val androidPath = android.graphics.Path().apply {
-            addPath(composePath.asAndroidPath())
-        }
-
-        val glowPaint = Paint().apply {
-            isAntiAlias = true
-            style = android.graphics.Paint.Style.STROKE
-            strokeWidth = 2f
-
-            shader = android.graphics.LinearGradient(
-                w*1f, h*0.55f,
-                w *0.75f, 0.53f*h,
-                intArrayOf(
-                    Color.White.copy(alpha = 0.7f).toArgb(),
-                    Color.White.copy(alpha = 0.1f).toArgb(),
-                    Color.Transparent.toArgb()
-                ),
-                floatArrayOf(0f, 0.7f,1f),
-                android.graphics.Shader.TileMode.CLAMP
-            )
-
-            maskFilter = BlurMaskFilter(
-                15f,
-                android.graphics.BlurMaskFilter.Blur.NORMAL
-            )
-        }
-        val linePaint = Paint().apply {
-            isAntiAlias = true
-            style = android.graphics.Paint.Style.STROKE
-            strokeWidth = 3f
-
-            shader = android.graphics.LinearGradient(
-                w*1f, h*0.55f,
-                w *0.75f, 0.53f*h,
-                intArrayOf(
-                    diffuseColor.copy(0.5f).toArgb(),
-                    diffuseColor.copy(alpha = 0.1f).toArgb(),
-                    Color.Transparent.toArgb()
-                ),
-                floatArrayOf(0f, 0.99f, 1f),
-                android.graphics.Shader.TileMode.CLAMP
-            )
-
-
-            maskFilter = android.graphics.BlurMaskFilter(
-                5f,
-                android.graphics.BlurMaskFilter.Blur.NORMAL
-            )
-        }
-
-        val diffuseGlowPaint= getDiffuse(diffuseColor.toArgb())
-
-        drawContext.canvas.nativeCanvas.apply {
-            save()
-            drawPath(androidPath, diffuseGlowPaint)
-            drawPath(androidPath, glowPaint)
-            drawPath(androidPath, linePaint)
-            restore()
-        }
-
-    }
-}
 
 
 @Composable
@@ -375,13 +139,19 @@ fun MyLikesAppBar() {
 }
 
 
-
-@SuppressLint("StateFlowValueCalledInComposition")
+@OptIn(ExperimentalFoundationApi::class)
+@SuppressLint("StateFlowValueCalledInComposition", "UnrememberedMutableState")
 @Composable
 fun LikesScreen(playerVM: PlayerViewModel, likesVM: LikesViewModel) {
     val queue by likesVM.likesQueue.collectAsState()
     val currentTrack by playerVM.currentTrack.collectAsState()
-    val isLoading by remember { likesVM::isLoading }
+    val isLoading by likesVM::isLoading
+
+    val pages by derivedStateOf { queue.tracks.chunked(3) }
+
+    val state = rememberPagerState(pageCount = { pages.size.coerceAtMost(3) })
+
+
 
     Column(
         modifier = Modifier
@@ -478,65 +248,87 @@ fun LikesScreen(playerVM: PlayerViewModel, likesVM: LikesViewModel) {
                         )
                     }
                 }
-                LazyColumn(modifier = Modifier.padding(top = 5.dp, start = 5.dp)) {
-                    items(queue.tracks.size) { index ->
-                        val track = queue.tracks[index]
-                        val isCurrent = track.id == currentTrack?.id
-                        if (index<=2)
-                        Box(
-                            modifier =
-                            if (isCurrent) Modifier.background(Color(0xFFEEEDED))
-                            else Modifier.background(Color.Transparent)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.clickable { likesVM.play(playerVM, track) }) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    SubcomposeAsyncImage(
-                                        model =  track.imageUrl,
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(80.dp)
-                                            .padding(13.dp).clip(RoundedCornerShape(8.dp)),
-                                        loading = {
-                                            CircularProgressIndicator()
-                                        },
-                                        error = {
-                                            Text("Ошибка загрузки")
+                HorizontalPager(
+                    state = state,
+                    contentPadding = PaddingValues(
+                        start = 0.dp,
+                        end = 40.dp
+                    ),
+                    pageSpacing = 6.dp
+                ) { page ->
+                    val items=pages[page]
+                    LazyColumn(modifier = Modifier.padding(top = 5.dp, start = 5.dp)) {
+                        items(items.size) { index ->
+                            val track = items[index]
+                            val isCurrent = track.id == currentTrack?.id
+                                Box(
+                                    modifier =
+                                    if (isCurrent) Modifier.background(Color(0xFFEEEDED))
+                                    else Modifier.background(Color.Transparent)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.clickable {
+                                            likesVM.play(
+                                                playerVM,
+                                                track
+                                            )
+                                        }) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            SubcomposeAsyncImage(
+                                                model = track.imageUrl,
+                                                contentDescription = null,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .size(80.dp)
+                                                    .padding(13.dp).clip(RoundedCornerShape(8.dp)),
+                                                loading = {
+                                                    CircularProgressIndicator()
+                                                },
+                                                error = {
+                                                    Text("Ошибка загрузки")
+                                                }
+                                            )
+                                            if (currentTrack?.id == track.id && playerVM.isTrackPlaying)
+                                                PulsingCircle()
                                         }
-                                    )
-                                    if (currentTrack?.id == track.id && playerVM.isTrackPlaying)
-                                        PulsingCircle()
+                                        Spacer(modifier = Modifier.width(5.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = track.title,
+                                                modifier = Modifier,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(3.dp))
+                                            Text(
+                                                text = track.artist,
+                                                modifier = Modifier,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = Color(0xFF6E6E6E),
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        Icon(
+                                            Icons.Default.ArrowCircleDown,
+                                            contentDescription = null,
+                                            tint = Color(0xFF33961E),
+                                            modifier = Modifier.size(25.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(15.dp))
+//                                        Text(
+//                                            text = getDuration(track.duration), fontSize = 18.sp,
+//                                            fontWeight = FontWeight.Bold, color = Color(0xFF6E6E6E)
+//                                        )
+                                        Icon(
+                                            Icons.Default.MoreHoriz,
+                                            contentDescription = null,
+                                            tint = Color(0xFF868686),
+                                            modifier = Modifier.size(25.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                    }
                                 }
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = track.title,
-                                        modifier = Modifier,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Spacer(modifier = Modifier.height(3.dp))
-                                    Text(
-                                        text = track.artist,
-                                        modifier = Modifier,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = Color(0xFF6E6E6E),
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Icon(
-                                    Icons.Default.ArrowCircleDown, contentDescription = null,
-                                    tint = Color(0xFF33961E), modifier = Modifier.size(25.dp)
-                                )
-                                Spacer(modifier = Modifier.width(15.dp))
-                                Text(
-                                    text = getDuration(track.duration), fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold, color = Color(0xFF6E6E6E)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                            }
                         }
                     }
                 }

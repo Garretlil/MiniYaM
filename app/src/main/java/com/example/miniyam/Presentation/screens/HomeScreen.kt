@@ -95,14 +95,13 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
         )
-        when {
-            isLoading == SearchStates.LOADING -> {
+        when (isLoading) {
+            SearchStates.LOADING -> {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-
-            isLoading == SearchStates.ERROR -> {
+            SearchStates.ERROR -> {
                 Column(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -126,7 +125,6 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
                     }
                 }
             }
-
             else -> {
                 LazyColumn(modifier = Modifier.padding(top = 100.dp)) {
                     items(queue.tracks.size) { index ->

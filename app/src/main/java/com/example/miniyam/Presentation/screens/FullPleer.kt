@@ -606,6 +606,8 @@ fun ExpandedPlayerWithSlideAnimation(onCollapse: () -> Unit,viewModel: PlayerVie
             }
         }
     }
+    val scopeModal = rememberCoroutineScope()
+
     if (showTimer) {
         ModalBottomSheet(
             onDismissRequest = { showTimer = false },
@@ -627,7 +629,16 @@ fun ExpandedPlayerWithSlideAnimation(onCollapse: () -> Unit,viewModel: PlayerVie
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 24.sp
                 )
-                CircularSleepTimer(playerVM = viewModel)
+
+                CircularSleepTimer(
+                    playerVM = viewModel,
+                    hideTimer = {
+                        scopeModal.launch {
+                            sheetState.hide()
+                            showTimer = false
+                        }
+                    }
+                )
             }
         }
     }
@@ -638,7 +649,8 @@ fun ExpandedPlayerWithSlideAnimation(onCollapse: () -> Unit,viewModel: PlayerVie
 fun CircularSleepTimer(
     modifier: Modifier = Modifier,
     onValueChange: (minutes: Int) -> Unit = {},
-    playerVM: PlayerViewModel
+    playerVM: PlayerViewModel,
+    hideTimer: () ->Unit
 ) {
     val remainingTime = playerVM.remainingTime.collectAsState()
     val isTimerOn = playerVM.isTimerOn.collectAsState()
@@ -650,6 +662,8 @@ fun CircularSleepTimer(
     var countTurns by remember { mutableIntStateOf(0) }
     var radius by remember { mutableFloatStateOf(0f) }
     var lastDragEndTime by remember { mutableLongStateOf(0L) }
+
+    var isFirstStart by remember { mutableStateOf(!isTimerOn.value) }
     
     LaunchedEffect(remainingTime.value, isTimerOn.value, isDragging) {
         if (isTimerOn.value && !isDragging) {
@@ -765,7 +779,9 @@ fun CircularSleepTimer(
                                             playerVM.startTimer(durationMillis = minutesExact * 60 * 1000L)
                                         }
                                     } else {
-                                        playerVM.startTimer(durationMillis = minutesExact * 60 * 1000L)
+                                        if (!isFirstStart){
+                                            playerVM.startTimer(durationMillis = minutesExact * 60 * 1000L)
+                                        }
                                     }
                                 } else {
                                     playerVM.startTimer(durationMillis = 0L)
@@ -924,6 +940,10 @@ fun CircularSleepTimer(
                 playerVM.startTimer(
                     durationMillis = minutes * 60 * 1000L
                 )
+                isFirstStart=false
+                if (!isTimerOn.value){
+                    hideTimer()
+                }
             }
         )
     }

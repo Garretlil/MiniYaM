@@ -65,15 +65,17 @@ class SearchViewModel @Inject constructor(
         private set
 
     fun play(playerVM: PlayerViewModel, track: Track) {
-        if (compareQueue(_rawSearchQueue.value.tracks, playerVM.currentQueue.value.tracks)) {
+        val currentQueue = searchQueue.value
+        if (compareQueue(currentQueue.tracks, playerVM.currentQueue.value.tracks)) {
             playerVM.play(track)
         } else {
-            val index = _rawSearchQueue.value.tracks.indexOf(track)
+            val index = currentQueue.tracks.indexOfFirst { it.id == track.id }
+            if (index == -1) return
 
             playerVM.setQueue(
                 QueueState(
                     source = "search",
-                    tracks = _rawSearchQueue.value.tracks,
+                    tracks = currentQueue.tracks,
                     currentIndex = index
                 )
             )

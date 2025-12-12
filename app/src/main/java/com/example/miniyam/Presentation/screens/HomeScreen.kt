@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowCircleDown
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -88,12 +89,13 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
     val isLoading by remember { homeVM::isLoading }
     val errorMessage by remember { homeVM::errorMessage }
     
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.TopStart) {
         Text(
             text = "Вся музыка",
             modifier = Modifier.padding(top = 60.dp, start = 16.dp).blur(1.dp),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
+            color = Color.White
         )
         when (isLoading) {
             SearchStates.LOADING -> {
@@ -162,7 +164,8 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
                                         text = track.title,
                                         modifier = Modifier,
                                         style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
                                     )
                                     Spacer(modifier = Modifier.height(3.dp))
                                     Text(
@@ -178,9 +181,11 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
                                     tint = Color(0xFF33961E), modifier = Modifier.size(25.dp)
                                 )
                                 Spacer(modifier = Modifier.width(15.dp))
-                                Text(
-                                    text = getDuration(track.duration), fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold, color = Color(0xFF6E6E6E)
+                                Icon(
+                                    Icons.Default.MoreHoriz,
+                                    contentDescription = null,
+                                    tint = Color(0xFF868686),
+                                    modifier = Modifier.size(25.dp)
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                             }

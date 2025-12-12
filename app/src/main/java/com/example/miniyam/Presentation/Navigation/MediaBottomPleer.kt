@@ -106,7 +106,7 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
     val currentPosition by viewModel::currentPositionMs
     val imageUrl =   currentTrack?.imageUrl
 
-    var trackAverageColor by remember { mutableStateOf(Color(0xFFE3E1E1)) }
+    var trackAverageColor by remember { mutableStateOf(Color(0xFF72BBE3).copy(0.2f)) }
     var barAverageColor by remember { mutableStateOf(Color(0xFFE3E1E1)) }
     var backAvColor by remember { mutableStateOf(Color(0xFFB0B0B0)) }
 
@@ -138,7 +138,7 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(70.dp)
-            .background(Color(0xB3F6F6F6))
+            .background(Color.Black)
             .clickable { onExpand() }
     ) {
         Box(
@@ -149,112 +149,117 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
                 .clip(RoundedCornerShape(15.dp))
                 .background(trackAverageColor)
         ) {
-            if (currentTrack!=null)
-            Box(
-                modifier = Modifier
-                    .height(70.dp).width(((currentPosition.toDouble()/ currentTrack!!.duration)*390).dp)
-                    .padding(end = 0.dp)
-                    .clip(RoundedCornerShape(0.dp))
-                    .background(barAverageColor)
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 3.dp),
-            ) {
-                if (currentTrack != null) {
-                    Box(contentAlignment = Alignment.Center) {
-                        SubcomposeAsyncImage(
-                            model =  currentTrack!!.imageUrl,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(55.dp)
-                                .padding(5.dp)
-                                .clip(RoundedCornerShape(5.dp)),
-                            loading = {
-                                CircularProgressIndicator()
-                            },
-                            error = {
-                                Text("Ошибка загрузки")
-                            }
-                        )
-
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = currentTrack!!.title,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Text(
-                            text = currentTrack!!.artist,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color(0xFF6E6E6E),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    val heights by viewModel.heights.collectAsState()
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        val reorderedIndices = listOf(3, 1, 2,4)
-                        for (i in reorderedIndices) {
-                            val animatedHeight by animateDpAsState(
-                                targetValue = heights[i].coerceAtLeast(4.dp),
-                                animationSpec = tween(100, easing = LinearEasing),
-                                label = "",
+                if (currentTrack!=null)
+                Box(
+                    modifier = Modifier
+                        .height(70.dp)
+                        .width(((currentPosition.toDouble() / currentTrack!!.duration) * 390).dp)
+                        .padding(end = 0.dp)
+                        .clip(RoundedCornerShape(0.dp))
+                        .background(barAverageColor)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 3.dp),
+                ) {
+                    if (currentTrack != null) {
+                        Box(contentAlignment = Alignment.Center) {
+                            SubcomposeAsyncImage(
+                                model = currentTrack!!.imageUrl,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(55.dp)
+                                    .padding(5.dp)
+                                    .clip(RoundedCornerShape(5.dp)),
+                                loading = {
+                                    CircularProgressIndicator()
+                                },
+                                error = {
+                                    Text("Ошибка загрузки")
+                                }
                             )
-                            Box(
-                                Modifier
-                                    .width(3.dp)
-                                    .height(animatedHeight)
-                                    .background(lerp(backAvColor, Color.White,0.4f), RoundedCornerShape(3.dp))
+
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = currentTrack!!.title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = currentTrack!!.artist,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color(0xFF6E6E6E),
+                                fontWeight = FontWeight.Bold
                             )
                         }
-                    }
-                    Spacer(modifier = Modifier.width(15.dp))
-                    Icon(
-                        imageVector = Icons.Default.HeartBroken,
-                        modifier = Modifier
-                            .clickable { viewModel.likeTrack(currentTrack!!) }
-                            .size(25.dp),
-                        contentDescription = null,
-                        tint = if (currentTrack!!.liked) Color(0xFFDC3535) else Color.Gray
-                    )
-                    Spacer(modifier = Modifier.width(15.dp))
-                    if (isPlaying) {
+                        val heights by viewModel.heights.collectAsState()
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val reorderedIndices = listOf(3, 1, 2, 4)
+                            for (i in reorderedIndices) {
+                                val animatedHeight by animateDpAsState(
+                                    targetValue = heights[i].coerceAtLeast(4.dp),
+                                    animationSpec = tween(100, easing = LinearEasing),
+                                    label = "",
+                                )
+                                Box(
+                                    Modifier
+                                        .width(3.dp)
+                                        .height(animatedHeight)
+                                        .background(
+                                            lerp(backAvColor, Color.White, 0.4f),
+                                            RoundedCornerShape(3.dp)
+                                        )
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(15.dp))
                         Icon(
-                            Icons.Default.Pause,
-                            modifier = Modifier.clickable {
-                                viewModel.pause()
-                            },
-                            contentDescription = null
+                            imageVector = Icons.Default.HeartBroken,
+                            modifier = Modifier
+                                .clickable { viewModel.likeTrack(currentTrack!!) }
+                                .size(25.dp),
+                            contentDescription = null,
+                            tint = if (currentTrack!!.liked) Color(0xFFDC3535) else Color.Gray
                         )
-                    } else {
-                        Icon(
-                            Icons.Default.PlayArrow,
-                            modifier = Modifier.clickable {
-                                viewModel.resume()
-                            },
-                            contentDescription = null
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(17.dp))
+                        Spacer(modifier = Modifier.width(15.dp))
+                        if (isPlaying) {
+                            Icon(
+                                Icons.Default.Pause,
+                                modifier = Modifier.clickable {
+                                    viewModel.pause()
+                                },
+                                contentDescription = null
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                modifier = Modifier.clickable {
+                                    viewModel.resume()
+                                },
+                                contentDescription = null
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(17.dp))
 
-                } else {
-                    Spacer(modifier = Modifier.width(45.dp))
-                    Spacer(modifier = Modifier.width(15.dp))
-                    Text(
-                        text = "",
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    } else {
+                        Spacer(modifier = Modifier.width(45.dp))
+                        Spacer(modifier = Modifier.width(15.dp))
+                        Text(
+                            text = "",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

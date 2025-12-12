@@ -9,13 +9,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.miniyam.BASEURL
 import com.example.miniyam.Data.repository.RemoteMusic
 import com.example.miniyam.Domain.Track
+import com.example.miniyam.Domain.managers.LikesManager
 import com.example.miniyam.Domain.safeCall
 import com.example.miniyam.Presentation.PlayerViewModel
 import com.example.miniyam.Presentation.QueueState
 import com.example.miniyam.Presentation.compareQueue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -28,10 +32,25 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val remoteMusic: RemoteMusic,
     private val sharedPreferences: SharedPreferences,
+    private val likesManager: LikesManager
 ): ViewModel(){
 
-    private val _homeQueue = MutableStateFlow(QueueState("home", emptyList(), 0))
-    val homeQueue: StateFlow<QueueState> = _homeQueue
+    private val _rawHomeQueue = MutableStateFlow(QueueState("home", emptyList(), 0))
+    val homeQueue: StateFlow<QueueState> = combine(
+        _rawHomeQueue,
+        likesManager.likesTracks
+    ) { queue, likedTracks ->
+        val likedIds = likedTracks.map { it.id }.toSet()
+        queue.copy(
+            tracks = queue.tracks.map { track ->
+                track.copy(liked = track.id in likedIds)
+            }
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        QueueState("home", emptyList(), 0)
+    )
 
     var isLoading by mutableStateOf(SearchStates.NONE)
         private set
@@ -40,7 +59,8 @@ class HomeViewModel @Inject constructor(
         private set
 
     fun play(playerVM: PlayerViewModel, track: Track){
-        if (compareQueue(_homeQueue.value.tracks,playerVM.currentQueue.value.tracks)){
+        val currentQueue = homeQueue.value
+        if (compareQueue(currentQueue.tracks, playerVM.currentQueue.value.tracks)){
             playerVM.play(track)
         }
         else{
@@ -48,11 +68,12 @@ class HomeViewModel @Inject constructor(
                 playerVM.play(track)
             }
             else {
-                val index = _homeQueue.value.tracks.indexOf(track)
+                val index = currentQueue.tracks.indexOfFirst { it.id == track.id }
+                if (index == -1) return
                 playerVM.setQueue(
                     QueueState(
                         source = "home",
-                        tracks = _homeQueue.value.tracks,
+                        tracks = currentQueue.tracks,
                         currentIndex = index
                     )
                 )
@@ -81,7 +102,7 @@ class HomeViewModel @Inject constructor(
             
             when (result) {
                 is com.example.miniyam.Domain.Result.Success -> {
-                    _homeQueue.update { current ->
+                    _rawHomeQueue.update { current ->
                         current.copy(tracks = result.data.map { it.copy(url = it.url) })
                     }
                     isLoading = SearchStates.LOADED
@@ -89,7 +110,7 @@ class HomeViewModel @Inject constructor(
                 is com.example.miniyam.Domain.Result.Error -> {
                     errorMessage = getErrorMessage(result.exception)
                     isLoading = SearchStates.ERROR
-                    _homeQueue.update { current ->
+                    _rawHomeQueue.update { current ->
                         current.copy(tracks = emptyList())
                     }
                 }

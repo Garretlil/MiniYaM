@@ -44,4 +44,8 @@ class LikesManager @Inject constructor(
         }
     }
 
+    init {
+        getLikedTrack()
+    }
+
 }

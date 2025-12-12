@@ -91,3 +91,4 @@ object SecurePreferencesHelper {
             .apply()
     }
 }
+

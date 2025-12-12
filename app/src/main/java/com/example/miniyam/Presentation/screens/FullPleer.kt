@@ -512,7 +512,7 @@ fun ExpandedPlayerWithSlideAnimation(onCollapse: () -> Unit,viewModel: PlayerVie
                             .size(30.dp)
                             .clickable { viewModel.likeTrack(currentTrack!!) },
                         contentDescription = null,
-                        tint = if (currentTrack!!.liked) Color(0xFFDC3535) else Color.White.copy(alpha = 0.7f)
+                        tint = if (currentTrack!!.liked) Color(0xFFEECD09) else Color.White.copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(40.dp))

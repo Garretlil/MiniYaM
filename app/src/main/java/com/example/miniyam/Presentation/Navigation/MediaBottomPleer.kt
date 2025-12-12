@@ -76,7 +76,7 @@ fun calculateRealAverageColor(bitmap: Bitmap?): List<Color> {
             pixelCount++
         }
     }
-    val factor1=0.85f ;val factor2=0.72f ;val factor3=0f
+    val factor1=0.2f ;val factor2=0.1f ;val factor3=0f
     val red = (redSum / pixelCount).toInt()
     val green = (greenSum / pixelCount).toInt()
     val blue = (blueSum / pixelCount).toInt()
@@ -106,9 +106,11 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
     val currentPosition by viewModel::currentPositionMs
     val imageUrl =   currentTrack?.imageUrl
 
-    var trackAverageColor by remember { mutableStateOf(Color(0xFF72BBE3).copy(0.2f)) }
+    var trackAverageColor by remember { mutableStateOf(Color(0xFFA8AFB4).copy(0.15f)) }
     var barAverageColor by remember { mutableStateOf(Color(0xFFE3E1E1)) }
     var backAvColor by remember { mutableStateOf(Color(0xFFB0B0B0)) }
+
+
 
     LaunchedEffect(imageUrl) {
         imageUrl.let { url ->
@@ -123,8 +125,8 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
                 if (result is SuccessResult) {
                     val bitmap = result.drawable.toBitmap()
                     val colors = calculateRealAverageColor(bitmap)
-                    trackAverageColor = colors[0]
-                    barAverageColor = colors[1]
+                    trackAverageColor = colors[0].copy(0.5f)
+                    barAverageColor = colors[1].copy(0.5f)
                     backAvColor = colors[2]
                 }
             } catch (e: Exception) {
@@ -188,13 +190,14 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
                             Text(
                                 text = currentTrack!!.title,
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                             Spacer(modifier = Modifier.height(3.dp))
                             Text(
                                 text = currentTrack!!.artist,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = Color(0xFF6E6E6E),
+                                color = Color(0xFF989797),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -228,7 +231,7 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
                                 .clickable { viewModel.likeTrack(currentTrack!!) }
                                 .size(25.dp),
                             contentDescription = null,
-                            tint = if (currentTrack!!.liked) Color(0xFFDC3535) else Color.Gray
+                            tint = if (currentTrack!!.liked) Color(0xFFEECD09) else Color.Gray
                         )
                         Spacer(modifier = Modifier.width(15.dp))
                         if (isPlaying) {
@@ -237,7 +240,8 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
                                 modifier = Modifier.clickable {
                                     viewModel.pause()
                                 },
-                                contentDescription = null
+                                contentDescription = null,
+                                tint = Color.White
                             )
                         } else {
                             Icon(
@@ -245,25 +249,44 @@ fun MiniPlayer(viewModel: PlayerViewModel,onExpand: () -> Unit) {
                                 modifier = Modifier.clickable {
                                     viewModel.resume()
                                 },
-                                contentDescription = null
+                                contentDescription = null,
+                                tint = Color.White
                             )
                         }
                         Spacer(modifier = Modifier.width(17.dp))
 
                     } else {
-                        Spacer(modifier = Modifier.width(45.dp))
-                        Spacer(modifier = Modifier.width(15.dp))
-                        Text(
-                            text = "",
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
+                        val defaultBoxColor = Color(0xFFA8AFB4).copy(0.15f)
+                        Box(
+                            modifier = Modifier
+                                .size(55.dp)
+                                .padding(5.dp)
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(defaultBoxColor)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .width(100.dp)
+                                    .height(17.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(defaultBoxColor)
+                            )
+                            Spacer(modifier = Modifier.height(5.dp))
+                            Box(
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .height(15.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(defaultBoxColor)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(15.dp))
                     }
                 }
             }
         }
-    }
 }
 @Composable
 fun PerfectWaveDots(

@@ -134,7 +134,7 @@ fun HomeScreen(playerVM: PlayerViewModel, homeVM: HomeViewModel){
                         val isCurrent = track.id == currentTrack?.id
                         Box(
                             modifier =
-                            if (isCurrent) Modifier.background(Color(0xFFEEEDED))
+                            if (isCurrent) Modifier.background(Color(0xFFEEEDED).copy(0.1f))
                             else Modifier.background(Color.Transparent)
                         ) {
                             Row(
